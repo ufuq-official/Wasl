@@ -114,15 +114,19 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-xl leading-tight tracking-wide">منصة إيصالات الدفع - أفق</h1>
-                    <p class="text-xs text-ofoq-accent font-medium">نظام إصدار ومعاينة الوصل الإلكتروني المعتمد</p>
+                    <p class="text-xs text-ofoq-accent font-medium">نظام إصدار وحفظ واستيراد الوصولات المعتمد</p>
                 </div>
             </div>
 
             <!-- Export Actions in Header -->
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="openArchiveModal()" class="bg-ofoq-brown hover:bg-ofoq-lightbrown text-white px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition duration-200 border border-ofoq-accent/30 shadow-sm">
+                    <i class="fa-solid fa-folder-open text-ofoq-accent"></i>
+                    <span>الأرشيف المحفوظ</span>
+                </button>
                 <button onclick="downloadAsImage()" class="bg-ofoq-brown hover:bg-ofoq-lightbrown text-white px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition duration-200 border border-ofoq-accent/30 shadow-sm">
                     <i class="fa-solid fa-file-image text-ofoq-accent"></i>
-                    <span>تنزيل كـ صورة (PNG)</span>
+                    <span>تنزيل (PNG)</span>
                 </button>
                 <button onclick="window.print()" class="bg-ofoq-cream text-ofoq-dark hover:bg-white px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition duration-200 shadow-sm">
                     <i class="fa-solid fa-print"></i>
@@ -137,12 +141,18 @@
             
             <!-- Left Panel: Control Form -->
             <section class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-ofoq-creamcard space-y-5 no-print">
-                <div class="border-b border-ofoq-cream pb-3">
-                    <h2 class="text-lg font-bold text-ofoq-dark flex items-center gap-2">
-                        <i class="fa-solid fa-sliders text-ofoq-brown"></i>
-                        لوحة إدخال البيانات
-                    </h2>
-                    <p class="text-xs text-slate-500 mt-1">تعبئة البيانات تلقائياً وتحديث المعاينة مباشرة</p>
+                <div class="border-b border-ofoq-cream pb-3 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-ofoq-dark flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-ofoq-brown"></i>
+                            لوحة إدخال البيانات
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">تعبئة البيانات وحفظ الوصولات تلقائياً</p>
+                    </div>
+                    <button type="button" onclick="saveCurrentReceipt()" title="حفظ الوصل الحالي في الأرشيف"
+                        class="bg-ofoq-dark hover:bg-ofoq-brown text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-bookmark"></i> حفظ للأرشيف
+                    </button>
                 </div>
 
                 <!-- Customer Details Form -->
@@ -176,13 +186,13 @@
                     <!-- Date & Time -->
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold text-ofoq-dark mb-1">تاريخ اليوم (تلقائي)</label>
+                            <label class="block text-xs font-bold text-ofoq-dark mb-1">تاريخ اليوم</label>
                             <input type="date" id="receiptDate" 
                                 class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition"
                                 onchange="updateReceipt()">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-ofoq-dark mb-1">الوقت (يدوي)</label>
+                            <label class="block text-xs font-bold text-ofoq-dark mb-1">الوقت</label>
                             <input type="time" id="receiptTime" 
                                 class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition"
                                 onchange="updateReceipt()">
@@ -365,7 +375,7 @@
                         </p>
                     </div>
 
-                    <!-- Instructions Section (Matched directly with user provided image) -->
+                    <!-- Instructions Section -->
                     <div class="instructions-box p-4 rounded-2xl space-y-3">
                         <h3 class="font-extrabold text-ofoq-dark text-sm sm:text-base border-b border-ofoq-creamcard pb-2">
                             توضيحات وإرشادات الاستخدام:
@@ -403,6 +413,51 @@
         </div>
     </main>
 
+    <!-- Archive & JSON Modal -->
+    <div id="archiveModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-ofoq-creamcard overflow-hidden">
+            <!-- Modal Header -->
+            <div class="bg-ofoq-dark text-white px-6 py-4 flex justify-between items-center border-b border-ofoq-accent">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-box-archive text-ofoq-accent"></i>
+                    <h3 class="font-black text-lg">أرشيف الوصولات المحفوظة</h3>
+                </div>
+                <button onclick="closeArchiveModal()" class="text-slate-300 hover:text-white font-bold text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (List + Backup / Restore JSON Actions) -->
+            <div class="p-6 overflow-y-auto flex-1 space-y-4 bg-ofoq-creamlight">
+                <!-- JSON Backup Actions Bar -->
+                <div class="bg-ofoq-cream p-3.5 rounded-xl border border-ofoq-creamcard flex flex-wrap items-center justify-between gap-3">
+                    <span class="text-xs font-bold text-ofoq-dark">إدارة بيانات الأرشيف (JSON):</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportJSONArchive()" class="bg-ofoq-brown hover:bg-ofoq-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-download"></i> تصدير أرشيف JSON
+                        </button>
+                        <label class="bg-white hover:bg-slate-50 text-ofoq-dark border border-ofoq-creamcard px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5">
+                            <i class="fa-solid fa-upload text-ofoq-brown"></i> استيراد JSON
+                            <input type="file" id="importFile" accept=".json" onchange="importJSONArchive(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Archived Receipts List -->
+                <div id="archiveListContainer" class="space-y-2.5">
+                    <!-- Dynamic Items loaded via JS -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-white px-6 py-3 border-t border-ofoq-cream text-left">
+                <button onclick="closeArchiveModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition">
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Services catalog setup
         const servicesCatalog = {
@@ -422,7 +477,6 @@
         // Initialize Date & Time Defaults
         function initDateTime() {
             const now = new Date();
-            
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const day = String(now.getDate()).padStart(2, '0');
@@ -435,25 +489,20 @@
 
         // Update Live Receipt Preview
         function updateReceipt() {
-            // Customer Name
             const customerName = document.getElementById('customerName').value.trim();
             document.getElementById('viewCustomerName').textContent = customerName || 'عميلنا العزيز';
 
-            // Serial Number
             document.getElementById('viewReceiptNumber').textContent = document.getElementById('receiptNumber').value;
 
-            // Date & Time
             const rawDate = document.getElementById('receiptDate').value;
             const rawTime = document.getElementById('receiptTime').value;
             document.getElementById('viewDate').textContent = rawDate || '--/--/----';
             document.getElementById('viewTime').textContent = rawTime || '--:--';
 
-            // Payment Method
             const method = document.getElementById('paymentMethod').value;
             document.getElementById('viewPaymentMethod').textContent = method;
             document.getElementById('viewFooterConfirmation').textContent = `تم إكمال عملية الدفع بنجاح عبر ${method}.`;
 
-            // Table Item Calculation
             const tableBody = document.getElementById('viewItemsTable');
             tableBody.innerHTML = '';
 
@@ -499,13 +548,169 @@
             document.getElementById('printTimestamp').textContent = now.toLocaleDateString('ar-EG') + ' - ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
         }
 
-        // Export Receipt as PNG Image using html2canvas
+        // ================= LOCAL STORAGE & ARCHIVE FUNCTIONS ================= //
+
+        function getStoredArchive() {
+            const data = localStorage.getItem('ofoq_receipts_archive');
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveCurrentReceipt() {
+            const receiptData = {
+                receiptNumber: document.getElementById('receiptNumber').value,
+                customerName: document.getElementById('customerName').value.trim() || 'عميل غير مسجل',
+                date: document.getElementById('receiptDate').value,
+                time: document.getElementById('receiptTime').value,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                items: {
+                    item1: { checked: document.getElementById('item1_check').checked, qty: document.getElementById('item1_qty').value },
+                    item2: { checked: document.getElementById('item2_check').checked, qty: document.getElementById('item2_qty').value },
+                    item3: { checked: document.getElementById('item3_check').checked, qty: document.getElementById('item3_qty').value }
+                },
+                total: document.getElementById('viewTotalAmount').textContent,
+                createdAt: new Date().toISOString()
+            };
+
+            let archive = getStoredArchive();
+            // Check if receipt already exists, replace it, otherwise push new
+            const existingIndex = archive.findIndex(r => r.receiptNumber === receiptData.receiptNumber);
+            if (existingIndex >= 0) {
+                archive[existingIndex] = receiptData;
+            } else {
+                archive.unshift(receiptData); // Add to top
+            }
+
+            localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
+            alert(`تم حفظ الوصل (${receiptData.receiptNumber}) في الأرشيف بنجاح!`);
+        }
+
+        function openArchiveModal() {
+            renderArchiveList();
+            document.getElementById('archiveModal').classList.remove('hidden');
+        }
+
+        function closeArchiveModal() {
+            document.getElementById('archiveModal').classList.add('hidden');
+        }
+
+        function renderArchiveList() {
+            const container = document.getElementById('archiveListContainer');
+            const archive = getStoredArchive();
+
+            if (archive.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 font-bold">
+                        <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
+                        <p>لا توجد وصولات محفوظة في الأرشيف حالياً.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            archive.forEach((rec, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-white p-3.5 rounded-xl border border-ofoq-creamcard flex items-center justify-between gap-3 shadow-sm";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-black text-xs text-ofoq-dark bg-ofoq-cream px-2 py-0.5 rounded">${rec.receiptNumber}</span>
+                            <span class="font-bold text-xs text-slate-800">${rec.customerName}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-1">${rec.date} | ${rec.time} - الإجمالي: <span class="font-bold text-ofoq-brown">${rec.total}</span></p>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="loadReceiptFromArchive(${index})" title="استرجاع للوحة التحكم" class="bg-ofoq-cream hover:bg-ofoq-creamcard text-ofoq-dark p-2 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                        <button onclick="deleteReceiptFromArchive('${rec.receiptNumber}')" title="حذف من الأرشيف" class="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function loadReceiptFromArchive(index) {
+            const archive = getStoredArchive();
+            const rec = archive[index];
+            if (!rec) return;
+
+            document.getElementById('receiptNumber').value = rec.receiptNumber;
+            document.getElementById('customerName').value = rec.customerName;
+            document.getElementById('receiptDate').value = rec.date;
+            document.getElementById('receiptTime').value = rec.time;
+            document.getElementById('paymentMethod').value = rec.paymentMethod;
+
+            if (rec.items) {
+                ['item1', 'item2', 'item3'].forEach(key => {
+                    if (rec.items[key]) {
+                        document.getElementById(`${key}_check`).checked = rec.items[key].checked;
+                        document.getElementById(`${key}_qty`).value = rec.items[key].qty;
+                    }
+                });
+            }
+
+            updateReceipt();
+            closeArchiveModal();
+        }
+
+        function deleteReceiptFromArchive(receiptNo) {
+            if (!confirm(`هل أنت متأكد من حذف الوصل ${receiptNo} من الأرشيف؟`)) return;
+            let archive = getStoredArchive();
+            archive = archive.filter(r => r.receiptNumber !== receiptNo);
+            localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
+            renderArchiveList();
+        }
+
+        // Export Archive as JSON File
+        function exportJSONArchive() {
+            const archive = getStoredArchive();
+            if (archive.length === 0) {
+                alert('الأرشيف فارغ، لا توجد بيانات للتصدير.');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(archive, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `أرشيف_وصولات_أفق_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Import Archive from JSON File
+        function importJSONArchive(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        localStorage.setItem('ofoq_receipts_archive', JSON.stringify(importedData));
+                        renderArchiveList();
+                        alert('تم استيراد أرشيف الوصولات بنجاح!');
+                    } else {
+                        alert('ملف الـ JSON غير صالح أو لا يحتوي على هيكل الأرشيف الصحيح.');
+                    }
+                } catch (err) {
+                    alert('حدث خطأ أثناء قراءة ملف JSON.');
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
+        // ================= EXPORT IMAGE ================= //
         function downloadAsImage() {
             const receiptNode = document.getElementById('receiptCard');
 
-            // Temporarily add high-res canvas scaling
             html2canvas(receiptNode, {
-                scale: 3, // High DPI resolution
+                scale: 3, 
                 useCORS: true,
                 backgroundColor: "#ffffff"
             }).then(canvas => {
