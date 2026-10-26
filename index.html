@@ -57,7 +57,6 @@
             box-shadow: 0 2px 8px rgba(61, 35, 20, 0.15);
         }
 
-        /* Instructions Card Border & Styling */
         .instructions-box {
             background-color: #F7F3EB;
             border: 1px solid #D4C5B3;
@@ -69,7 +68,6 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
         }
 
-        /* Print Settings */
         @media print {
             .no-print {
                 display: none !important;
@@ -86,12 +84,8 @@
                 margin: 0 !important;
                 padding: 10px !important;
             }
-            .page-break {
-                page-break-inside: avoid;
-            }
         }
 
-        /* Custom Scrollbars */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -126,7 +120,7 @@
                 </button>
                 <button onclick="downloadAsImage()" class="bg-ofoq-brown hover:bg-ofoq-lightbrown text-white px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition duration-200 border border-ofoq-accent/30 shadow-sm">
                     <i class="fa-solid fa-file-image text-ofoq-accent"></i>
-                    <span>تنزيل (PNG)</span>
+                    <span>تنزيل صورة (PNG)</span>
                 </button>
                 <button onclick="window.print()" class="bg-ofoq-cream text-ofoq-dark hover:bg-white px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition duration-200 shadow-sm">
                     <i class="fa-solid fa-print"></i>
@@ -145,9 +139,9 @@
                     <div>
                         <h2 class="text-lg font-bold text-ofoq-dark flex items-center gap-2">
                             <i class="fa-solid fa-sliders text-ofoq-brown"></i>
-                            لوحة إدخال البيانات
+                            لوحة إدخال البيانات والباقات
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">تعبئة البيانات وحفظ الوصولات تلقائياً</p>
+                        <p class="text-xs text-slate-500 mt-1">تعبئة البيانات والباقات مع الحفظ التلقائي</p>
                     </div>
                     <button type="button" onclick="saveCurrentReceipt()" title="حفظ الوصل الحالي في الأرشيف"
                         class="bg-ofoq-dark hover:bg-ofoq-brown text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
@@ -204,67 +198,52 @@
                         <label class="block text-xs font-bold text-ofoq-dark mb-1">طريقة الدفع</label>
                         <select id="paymentMethod" onchange="updateReceipt()"
                             class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
-                            <option value="سوبر كي">سوبر كي (SuperKey)</option>
                             <option value="زين العراق">زين العراق (Zain Cash)</option>
-                            <option value="ماستر كارد">ماستر كارد (MasterCard)</option>
-                            <option value="تحويل بنك دولي">تحويل بنك دولي (Bank Transfer)</option>
+                            <option value="كي كارد">كي كارد (Qi Card)</option>
+                            <option value="رصيد موبايل">رصيد موبايل (Mobile Credit)</option>
+                            <option value="تحويل بنكي">تحويل بنكي</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Services List -->
-                <div class="border-t border-ofoq-cream pt-3 space-y-2.5">
-                    <label class="block text-xs font-bold text-ofoq-dark">تفاصيل الشهادات والخدمات</label>
+                <!-- Packages Selection Section -->
+                <div class="border-t border-ofoq-cream pt-3 space-y-3">
+                    <label class="block text-xs font-bold text-ofoq-dark">اختيار الباقة والمدة</label>
                     
-                    <!-- Item 1 -->
-                    <div class="p-2.5 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl flex items-center justify-between">
-                        <div class="flex items-center gap-2.5">
-                            <input type="checkbox" id="item1_check" checked onchange="updateReceipt()" 
-                                class="w-4 h-4 text-ofoq-dark rounded focus:ring-ofoq-brown accent-ofoq-dark">
-                            <div>
-                                <p class="text-xs font-bold text-ofoq-dark">شهادة أبل 3 أشهر</p>
-                                <p class="text-[11px] font-bold text-ofoq-brown">$5</p>
-                            </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">نوع الباقة</label>
+                            <select id="packageType" onchange="updateReceipt()"
+                                class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
+                                <option value="الاعتيادية">الباقة الاعتيادية (Standard)</option>
+                                <option value="بلس">باقة بلس (Plus)</option>
+                                <option value="ماكس">باقة ماكس (Max)</option>
+                            </select>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xs font-bold text-slate-500">الكمية:</span>
-                            <input type="number" id="item1_qty" value="1" min="1" max="50" onchange="updateReceipt()" onkeyup="updateReceipt()"
-                                class="w-12 px-1.5 py-1 text-center bg-white border border-ofoq-creamcard rounded-lg text-xs font-bold">
-                        </div>
-                    </div>
-
-                    <!-- Item 2 -->
-                    <div class="p-2.5 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl flex items-center justify-between">
-                        <div class="flex items-center gap-2.5">
-                            <input type="checkbox" id="item2_check" onchange="updateReceipt()" 
-                                class="w-4 h-4 text-ofoq-dark rounded focus:ring-ofoq-brown accent-ofoq-dark">
-                            <div>
-                                <p class="text-xs font-bold text-ofoq-dark">شهادة أبل 6 أشهر</p>
-                                <p class="text-[11px] font-bold text-ofoq-brown">$12</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xs font-bold text-slate-500">الكمية:</span>
-                            <input type="number" id="item2_qty" value="1" min="1" max="50" onchange="updateReceipt()" onkeyup="updateReceipt()"
-                                class="w-12 px-1.5 py-1 text-center bg-white border border-ofoq-creamcard rounded-lg text-xs font-bold">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">مدة الاشتراك</label>
+                            <select id="packageDuration" onchange="updateReceipt()"
+                                class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
+                                <option value="3 أشهر">3 أشهر</option>
+                                <option value="6 أشهر">6 أشهر</option>
+                                <option value="سنة">سنة كاملة</option>
+                            </select>
                         </div>
                     </div>
 
-                    <!-- Item 3 -->
-                    <div class="p-2.5 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl flex items-center justify-between">
-                        <div class="flex items-center gap-2.5">
-                            <input type="checkbox" id="item3_check" onchange="updateReceipt()" 
-                                class="w-4 h-4 text-ofoq-dark rounded focus:ring-ofoq-brown accent-ofoq-dark">
-                            <div>
-                                <p class="text-xs font-bold text-ofoq-dark">شهادة أبل سنة كاملة</p>
-                                <p class="text-[11px] font-bold text-ofoq-brown">$15</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xs font-bold text-slate-500">الكمية:</span>
-                            <input type="number" id="item3_qty" value="1" min="1" max="50" onchange="updateReceipt()" onkeyup="updateReceipt()"
-                                class="w-12 px-1.5 py-1 text-center bg-white border border-ofoq-creamcard rounded-lg text-xs font-bold">
-                        </div>
+                    <!-- Custom Price Input -->
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1">سعر الاشتراك ($)</label>
+                        <input type="number" id="packagePrice" value="15" min="1" max="1000" oninput="updateReceipt()"
+                            class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
+                    </div>
+
+                    <!-- Notes Field -->
+                    <div>
+                        <label class="block text-xs font-bold text-ofoq-dark mb-1">ملاحظات العميل / الطلب</label>
+                        <textarea id="customerNotes" rows="2" placeholder="أضف أي ملاحظات خاصة بالعميل أو تفاصيل الحساب..." 
+                            class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition"
+                            oninput="updateReceipt()"></textarea>
                     </div>
                 </div>
 
@@ -293,12 +272,12 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-2 border-ofoq-cream pb-5 mb-5 gap-4">
                         <div class="flex items-center gap-3.5">
                             <div class="w-14 h-14 bg-ofoq-dark text-ofoq-cream rounded-2xl flex flex-col items-center justify-center shadow-md border border-ofoq-accent/40">
-                                <span class="font-black text-2xl leading-none">أفق</span>
+                                <span class="font-black text-2xl leading-none">أ</span>
                                 <span class="text-[8px] tracking-widest text-ofoq-accent font-bold mt-0.5">OFOQ</span>
                             </div>
                             <div>
-                                <h2 class="text-2xl font-black text-ofoq-dark tracking-wide">وصل دفع</h2>
-                                <p class="text-xs font-bold text-ofoq-lightbrown">شركة أفق لخدمات شهادات أبل</p>
+                                <h2 class="text-2xl font-black text-ofoq-dark tracking-wide">وصل دفع رسمي</h2>
+                                <p class="text-xs font-bold text-ofoq-lightbrown">منصة أفق الرقمية لخدمات التطبيقات والشهادات</p>
                             </div>
                         </div>
 
@@ -334,77 +313,61 @@
                             </div>
                             <div>
                                 <span class="text-[11px] font-bold text-ofoq-lightbrown block leading-tight">طريقة الدفع المعتمدة</span>
-                                <span id="viewPaymentMethod" class="font-black text-ofoq-dark text-xs">سوبر كي</span>
+                                <span id="viewPaymentMethod" class="font-black text-ofoq-dark text-xs">زين العراق</span>
                             </div>
                         </div>
                         <span class="text-xs font-bold text-ofoq-dark bg-ofoq-cream px-2.5 py-1 rounded-md border border-ofoq-creamcard">عملية موثوقة</span>
                     </div>
 
-                    <!-- Items Table -->
+                    <!-- Package Details Table -->
                     <div class="overflow-x-auto mb-5">
                         <table class="w-full text-right border-collapse">
                             <thead>
                                 <tr class="border-b-2 border-ofoq-cream text-ofoq-dark text-xs font-black">
-                                    <th class="py-2 px-2">الخدمة / المادة</th>
-                                    <th class="py-2 px-2 text-center">السعر</th>
-                                    <th class="py-2 px-2 text-center">الكمية</th>
-                                    <th class="py-2 px-2 text-left">المجموع</th>
+                                    <th class="py-2 px-2">تفاصيل الباقة والاشتراك</th>
+                                    <th class="py-2 px-2 text-center">المدة</th>
+                                    <th class="py-2 px-2 text-left">المبلغ</th>
                                 </tr>
                             </thead>
-                            <tbody id="viewItemsTable" class="divide-y divide-ofoq-cream text-xs font-bold text-slate-800">
-                                <!-- Dynamic rows -->
+                            <tbody class="divide-y divide-ofoq-cream text-xs font-bold text-slate-800">
+                                <tr>
+                                    <td class="py-3 px-2 font-black text-ofoq-dark">
+                                        باقة <span id="viewPackageType">الاعتيادية</span>
+                                    </td>
+                                    <td id="viewPackageDuration" class="py-3 px-2 text-center font-mono font-bold">3 أشهر</td>
+                                    <td id="viewPackagePrice" class="py-3 px-2 text-left font-mono font-black text-ofoq-dark">$15.00</td>
+                                </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Notes Section in View -->
+                    <div id="notesSectionView" class="mb-5 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl p-3 hidden">
+                        <span class="block text-[11px] font-bold text-ofoq-lightbrown mb-1"><i class="fa-solid fa-note-sticky ml-1"></i> ملاحظات الطلب:</span>
+                        <p id="viewCustomerNotesText" class="text-xs font-bold text-slate-700 whitespace-pre-line"></p>
                     </div>
 
                     <!-- Grand Total -->
                     <div class="border-t-2 border-ofoq-dark pt-3 mb-6">
                         <div class="flex justify-between items-center text-ofoq-dark">
-                            <span class="font-black text-base">المجموع الكلي:</span>
+                            <span class="font-black text-base">المجموع الكلي للاشتراك:</span>
                             <div class="text-left">
-                                <span id="viewTotalAmount" class="font-black text-2xl text-ofoq-dark">$0.00</span>
+                                <span id="viewTotalAmount" class="font-black text-2xl text-ofoq-dark">$15.00</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Note Confirmation -->
                     <div class="bg-ofoq-dark text-ofoq-cream rounded-xl p-3.5 text-center mb-6 shadow-sm">
-                        <p class="font-extrabold text-sm text-ofoq-accent mb-0.5">شكراً لتعاملك معنا!</p>
+                        <p class="font-extrabold text-sm text-ofoq-accent mb-0.5">شكراً لثقتكم بـ أفق!</p>
                         <p id="viewFooterConfirmation" class="text-xs font-medium text-slate-200">
-                            تم إكمال عملية الدفع بنجاح عبر سوبر كي.
+                            تم تفعيل اشتراكك بنجاح عبر زين العراق.
                         </p>
-                    </div>
-
-                    <!-- Instructions Section -->
-                    <div class="instructions-box p-4 rounded-2xl space-y-3">
-                        <h3 class="font-extrabold text-ofoq-dark text-sm sm:text-base border-b border-ofoq-creamcard pb-2">
-                            توضيحات وإرشادات الاستخدام:
-                        </h3>
-
-                        <!-- Instruction 1 -->
-                        <div class="instruction-item p-3.5 rounded-xl space-y-1">
-                            <h4 class="font-black text-ofoq-dark text-xs sm:text-sm">
-                                1. تشغيل الـ VPN أثناء استخدام الشهادة
-                            </h4>
-                            <p class="text-xs font-bold text-slate-700 leading-relaxed">
-                                يُنصح بعدم تشغيل برامج الـ VPN لتجنب حدوث أي تعارض أمني. وفي حال توقفت الشهادة بسببه، فإن كادرنا متواجد فوراً لمساعدتك وتعويضك.
-                            </p>
-                        </div>
-
-                        <!-- Instruction 2 -->
-                        <div class="instruction-item p-3.5 rounded-xl space-y-1">
-                            <h4 class="font-black text-ofoq-dark text-xs sm:text-sm">
-                                2. التحديثات وحظر شركة أبل
-                            </h4>
-                            <p class="text-xs font-bold text-slate-700 leading-relaxed">
-                                قد تتعرض الشهادات للحظر المفاجئ بسبب تحديثات الحماية من أبل. نحن في <span class="font-black text-ofoq-dark">أفق</span> تميزنا بتقديم تعويض كامل ومباشر لك طوال فترة اشتراكك.
-                            </p>
-                        </div>
                     </div>
 
                     <!-- Print / Export Footer Timestamp -->
                     <div class="mt-6 pt-3 border-t border-dashed border-ofoq-creamcard flex justify-between items-center text-[10px] text-slate-500 font-bold">
-                        <span>إيصال صادر رسمياً عن شركة أفق</span>
+                        <span>إيصال صادر رسمياً عن منصة أفق الرقمية</span>
                         <span>تاريخ الطباعة: <span id="printTimestamp"></span></span>
                     </div>
 
@@ -419,7 +382,7 @@
             <!-- Modal Header -->
             <div class="bg-ofoq-dark text-white px-6 py-4 flex justify-between items-center border-b border-ofoq-accent">
                 <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-box-archive text-ofoq-accent"></i>
+                    <i class="fa-solid fa-folder-open text-ofoq-accent"></i>
                     <h3 class="font-black text-lg">أرشيف الوصولات المحفوظة</h3>
                 </div>
                 <button onclick="closeArchiveModal()" class="text-slate-300 hover:text-white font-bold text-xl">
@@ -431,10 +394,10 @@
             <div class="p-6 overflow-y-auto flex-1 space-y-4 bg-ofoq-creamlight">
                 <!-- JSON Backup Actions Bar -->
                 <div class="bg-ofoq-cream p-3.5 rounded-xl border border-ofoq-creamcard flex flex-wrap items-center justify-between gap-3">
-                    <span class="text-xs font-bold text-ofoq-dark">إدارة بيانات الأرشيف (JSON):</span>
+                    <span class="text-xs font-bold text-ofoq-dark">إدارة بيانات الأرشيف وتصديرها:</span>
                     <div class="flex items-center gap-2">
                         <button onclick="exportJSONArchive()" class="bg-ofoq-brown hover:bg-ofoq-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-download"></i> تصدير أرشيف JSON
+                            <i class="fa-solid fa-file-code"></i> تصدير JSON
                         </button>
                         <label class="bg-white hover:bg-slate-50 text-ofoq-dark border border-ofoq-creamcard px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5">
                             <i class="fa-solid fa-upload text-ofoq-brown"></i> استيراد JSON
@@ -450,7 +413,10 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="bg-white px-6 py-3 border-t border-ofoq-cream text-left">
+            <div class="bg-white px-6 py-3 border-t border-ofoq-cream text-left flex justify-between items-center">
+                <button onclick="clearArchive()" class="text-red-600 hover:text-red-800 text-xs font-bold transition flex items-center gap-1">
+                    <i class="fa-solid fa-trash"></i> مسح الأرشيف بالكامل
+                </button>
                 <button onclick="closeArchiveModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition">
                     إغلاق
                 </button>
@@ -459,13 +425,6 @@
     </div>
 
     <script>
-        // Services catalog setup
-        const servicesCatalog = {
-            item1: { name: 'شهادة أبل 3 أشهر', price: 5 },
-            item2: { name: 'شهادة أبل 6 أشهر', price: 12 },
-            item3: { name: 'شهادة أبل سنة كاملة', price: 15 }
-        };
-
         // Auto Generate Random Receipt Serial Number
         function generateReceiptNumber() {
             const prefix = "OFOQ-";
@@ -501,48 +460,28 @@
 
             const method = document.getElementById('paymentMethod').value;
             document.getElementById('viewPaymentMethod').textContent = method;
-            document.getElementById('viewFooterConfirmation').textContent = `تم إكمال عملية الدفع بنجاح عبر ${method}.`;
+            document.getElementById('viewFooterConfirmation').textContent = `تم تفعيل اشتراكك بنجاح عبر ${method}.`;
 
-            const tableBody = document.getElementById('viewItemsTable');
-            tableBody.innerHTML = '';
+            // Package Details
+            const pkgType = document.getElementById('packageType').value;
+            const pkgDuration = document.getElementById('packageDuration').value;
+            let pkgPrice = parseFloat(document.getElementById('packagePrice').value) || 0;
 
-            let grandTotal = 0;
-            let count = 0;
+            document.getElementById('viewPackageType').textContent = pkgType;
+            document.getElementById('viewPackageDuration').textContent = pkgDuration;
+            document.getElementById('viewPackagePrice').textContent = `$${pkgPrice.toFixed(2)}`;
+            document.getElementById('viewTotalAmount').textContent = `$${pkgPrice.toFixed(2)}`;
 
-            Object.keys(servicesCatalog).forEach((key) => {
-                const isChecked = document.getElementById(`${key}_check`).checked;
-                const qtyInput = document.getElementById(`${key}_qty`);
-                let qty = parseInt(qtyInput.value) || 1;
-                if (qty < 1) qty = 1;
-
-                if (isChecked) {
-                    count++;
-                    const item = servicesCatalog[key];
-                    const total = item.price * qty;
-                    grandTotal += total;
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="py-2.5 px-2 font-black text-ofoq-dark">${item.name}</td>
-                        <td class="py-2.5 px-2 text-center font-mono font-bold">$${item.price}</td>
-                        <td class="py-2.5 px-2 text-center font-mono font-bold">${qty}</td>
-                        <td class="py-2.5 px-2 text-left font-mono font-black text-ofoq-dark">$${total.toFixed(2)}</td>
-                    `;
-                    tableBody.appendChild(row);
-                }
-            });
-
-            if (count === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="py-4 text-center text-slate-400 font-bold italic">
-                            لم يتم اختيار أي خدمة بعد.
-                        </td>
-                    </tr>
-                `;
+            // Notes Section
+            const notes = document.getElementById('customerNotes').value.trim();
+            const notesView = document.getElementById('notesSectionView');
+            const notesTextView = document.getElementById('viewCustomerNotesText');
+            if (notes) {
+                notesView.classList.remove('hidden');
+                notesTextView.textContent = notes;
+            } else {
+                notesView.classList.add('hidden');
             }
-
-            document.getElementById('viewTotalAmount').textContent = `$${grandTotal.toFixed(2)}`;
 
             const now = new Date();
             document.getElementById('printTimestamp').textContent = now.toLocaleDateString('ar-EG') + ' - ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
@@ -562,26 +501,23 @@
                 date: document.getElementById('receiptDate').value,
                 time: document.getElementById('receiptTime').value,
                 paymentMethod: document.getElementById('paymentMethod').value,
-                items: {
-                    item1: { checked: document.getElementById('item1_check').checked, qty: document.getElementById('item1_qty').value },
-                    item2: { checked: document.getElementById('item2_check').checked, qty: document.getElementById('item2_qty').value },
-                    item3: { checked: document.getElementById('item3_check').checked, qty: document.getElementById('item3_qty').value }
-                },
-                total: document.getElementById('viewTotalAmount').textContent,
-                createdAt: new Date().toISOString()
+                packageType: document.getElementById('packageType').value,
+                packageDuration: document.getElementById('packageDuration').value,
+                packagePrice: document.getElementById('packagePrice').value,
+                customerNotes: document.getElementById('customerNotes').value.trim()
             };
 
             let archive = getStoredArchive();
-            // Check if receipt already exists, replace it, otherwise push new
+            // Check if receipt number already exists, update it or push new
             const existingIndex = archive.findIndex(r => r.receiptNumber === receiptData.receiptNumber);
             if (existingIndex >= 0) {
                 archive[existingIndex] = receiptData;
             } else {
-                archive.unshift(receiptData); // Add to top
+                archive.unshift(receiptData);
             }
 
             localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
-            alert(`تم حفظ الوصل (${receiptData.receiptNumber}) في الأرشيف بنجاح!`);
+            alert('تم حفظ الوصل بنجاح في الأرشيف المحفوظ داخل الموقع!');
         }
 
         function openArchiveModal() {
@@ -599,82 +535,81 @@
 
             if (archive.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-8 text-slate-400 font-bold">
-                        <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
-                        <p>لا توجد وصولات محفوظة في الأرشيف حالياً.</p>
+                    <div class="text-center py-8 text-slate-400 text-xs font-bold">
+                        لا توجد وصولات محفوظة في الأرشيف حالياً.
                     </div>
                 `;
                 return;
             }
 
             container.innerHTML = '';
-            archive.forEach((rec, index) => {
-                const card = document.createElement('div');
-                card.className = "bg-white p-3.5 rounded-xl border border-ofoq-creamcard flex items-center justify-between gap-3 shadow-sm";
-                card.innerHTML = `
+            archive.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-3.5 rounded-xl border border-ofoq-creamcard flex items-center justify-between shadow-sm';
+                div.innerHTML = `
                     <div>
                         <div class="flex items-center gap-2">
-                            <span class="font-mono font-black text-xs text-ofoq-dark bg-ofoq-cream px-2 py-0.5 rounded">${rec.receiptNumber}</span>
-                            <span class="font-bold text-xs text-slate-800">${rec.customerName}</span>
+                            <span class="font-mono font-bold text-xs text-ofoq-dark">${item.receiptNumber}</span>
+                            <span class="bg-ofoq-cream text-ofoq-dark text-[10px] font-bold px-2 py-0.5 rounded">${item.packageType} - ${item.packageDuration}</span>
                         </div>
-                        <p class="text-[11px] text-slate-500 mt-1">${rec.date} | ${rec.time} - الإجمالي: <span class="font-bold text-ofoq-brown">${rec.total}</span></p>
+                        <p class="text-xs font-black text-slate-800 mt-1">${item.customerName} <span class="text-ofoq-brown font-mono font-bold">($${item.packagePrice})</span></p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">${item.date} | ${item.paymentMethod}</p>
                     </div>
                     <div class="flex items-center gap-1.5">
-                        <button onclick="loadReceiptFromArchive(${index})" title="استرجاع للوحة التحكم" class="bg-ofoq-cream hover:bg-ofoq-creamcard text-ofoq-dark p-2 rounded-lg text-xs font-bold transition">
+                        <button onclick='loadReceiptFromArchive(${index})' class="bg-ofoq-brown hover:bg-ofoq-dark text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="استعراض الوصل">
                             <i class="fa-solid fa-eye"></i>
                         </button>
-                        <button onclick="deleteReceiptFromArchive('${rec.receiptNumber}')" title="حذف من الأرشيف" class="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-lg text-xs font-bold transition">
+                        <button onclick='deleteArchivedItem(${index})' class="bg-red-100 hover:bg-red-200 text-red-700 px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="حذف">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
                 `;
-                container.appendChild(card);
+                container.appendChild(div);
             });
         }
 
         function loadReceiptFromArchive(index) {
             const archive = getStoredArchive();
-            const rec = archive[index];
-            if (!rec) return;
+            const item = archive[index];
+            if (!item) return;
 
-            document.getElementById('receiptNumber').value = rec.receiptNumber;
-            document.getElementById('customerName').value = rec.customerName;
-            document.getElementById('receiptDate').value = rec.date;
-            document.getElementById('receiptTime').value = rec.time;
-            document.getElementById('paymentMethod').value = rec.paymentMethod;
-
-            if (rec.items) {
-                ['item1', 'item2', 'item3'].forEach(key => {
-                    if (rec.items[key]) {
-                        document.getElementById(`${key}_check`).checked = rec.items[key].checked;
-                        document.getElementById(`${key}_qty`).value = rec.items[key].qty;
-                    }
-                });
-            }
+            document.getElementById('receiptNumber').value = item.receiptNumber;
+            document.getElementById('customerName').value = item.customerName;
+            document.getElementById('receiptDate').value = item.date;
+            document.getElementById('receiptTime').value = item.time;
+            document.getElementById('paymentMethod').value = item.paymentMethod;
+            document.getElementById('packageType').value = item.packageType;
+            document.getElementById('packageDuration').value = item.packageDuration;
+            document.getElementById('packagePrice').value = item.packagePrice;
+            document.getElementById('customerNotes').value = item.customerNotes || '';
 
             updateReceipt();
             closeArchiveModal();
         }
 
-        function deleteReceiptFromArchive(receiptNo) {
-            if (!confirm(`هل أنت متأكد من حذف الوصل ${receiptNo} من الأرشيف؟`)) return;
-            let archive = getStoredArchive();
-            archive = archive.filter(r => r.receiptNumber !== receiptNo);
-            localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
-            renderArchiveList();
+        function deleteArchivedItem(index) {
+            if (confirm('هل أنت متأكد من حذف هذا الوصل من الأرشيف؟')) {
+                let archive = getStoredArchive();
+                archive.splice(index, 1);
+                localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
+                renderArchiveList();
+            }
+        }
+
+        function clearArchive() {
+            if (confirm('تحذير: سيتم مسح كافة الوصولات المحفوظة في الأرشيف نهائياً. هل أنت متأكد؟')) {
+                localStorage.removeItem('ofoq_receipts_archive');
+                renderArchiveList();
+            }
         }
 
         // Export Archive as JSON File
         function exportJSONArchive() {
             const archive = getStoredArchive();
-            if (archive.length === 0) {
-                alert('الأرشيف فارغ، لا توجد بيانات للتصدير.');
-                return;
-            }
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(archive, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `أرشيف_وصولات_أفق_${new Date().toISOString().slice(0,10)}.json`);
+            downloadAnchor.setAttribute("download", "ofoq_receipts_archive.json");
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
@@ -682,51 +617,38 @@
 
         // Import Archive from JSON File
         function importJSONArchive(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (Array.isArray(importedData)) {
-                        localStorage.setItem('ofoq_receipts_archive', JSON.stringify(importedData));
-                        renderArchiveList();
-                        alert('تم استيراد أرشيف الوصولات بنجاح!');
-                    } else {
-                        alert('ملف الـ JSON غير صالح أو لا يحتوي على هيكل الأرشيف الصحيح.');
+            const fileReader = new FileReader();
+            if (event.target.files[0]) {
+                fileReader.readAsText(event.target.files[0], "UTF-8");
+                fileReader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        if (Array.isArray(importedData)) {
+                            localStorage.setItem('ofoq_receipts_archive', JSON.stringify(importedData));
+                            renderArchiveList();
+                            alert('تم استيراد أرشيف الوصولات بنجاح!');
+                        } else {
+                            alert('ملف JSON غير صالح.');
+                        }
+                    } catch (error) {
+                        alert('حدث خطأ أثناء قراءة ملف JSON.');
                     }
-                } catch (err) {
-                    alert('حدث خطأ أثناء قراءة ملف JSON.');
-                    console.error(err);
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = ''; // Reset input
+                };
+            }
         }
 
-        // ================= EXPORT IMAGE ================= //
+        // Download receipt card as Image (PNG)
         function downloadAsImage() {
-            const receiptNode = document.getElementById('receiptCard');
-
-            html2canvas(receiptNode, {
-                scale: 3, 
-                useCORS: true,
-                backgroundColor: "#ffffff"
-            }).then(canvas => {
-                const image = canvas.toDataURL("image/png");
+            const element = document.getElementById('receiptCard');
+            html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
                 const link = document.createElement('a');
-                const receiptNo = document.getElementById('receiptNumber').value || 'receipt';
-                link.download = `وصل_دفع_أفق_${receiptNo}.png`;
-                link.href = image;
+                link.download = `receipt_${document.getElementById('receiptNumber').value}.png`;
+                link.href = canvas.toDataURL('image/png');
                 link.click();
-            }).catch(err => {
-                alert('حدث خطأ أثناء تنزيل الصورة، يرجى المحاولة لاحقاً.');
-                console.error(err);
             });
         }
 
-        // Window Load Handler
+        // Initialize on Load
         window.onload = function() {
             generateReceiptNumber();
             initDateTime();
