@@ -23,7 +23,7 @@
                     },
                     colors: {
                         ofoq: {
-                            dark: '#3D2314',     /* بني غامق ملكي */
+                            dark: '#3D2314',    /* بني غامق ملكي */
                             brown: '#5C3A21',    /* بني دافئ */
                             lightbrown: '#8C5A3C',/* بني فاتح للتحديدات */
                             cream: '#F7F3EB',    /* أبيض مائل للكريمي / بيج فاتح جداً */
@@ -347,7 +347,7 @@
                     </div>
 
                     <!-- Grand Total -->
-                    <div class="border-t-2 border-ofoq-dark pt-3 mb-6">
+                    <div class="border-t-2 border-ofoq-dark pt-3 mb-5">
                         <div class="flex justify-between items-center text-ofoq-dark">
                             <span class="font-black text-base">المجموع الكلي للاشتراك:</span>
                             <div class="text-left">
@@ -357,15 +357,53 @@
                     </div>
 
                     <!-- Note Confirmation -->
-                    <div class="bg-ofoq-dark text-ofoq-cream rounded-xl p-3.5 text-center mb-6 shadow-sm">
+                    <div class="bg-ofoq-dark text-ofoq-cream rounded-xl p-3.5 text-center mb-5 shadow-sm">
                         <p class="font-extrabold text-sm text-ofoq-accent mb-0.5">شكراً لثقتكم بـ أفق!</p>
                         <p id="viewFooterConfirmation" class="text-xs font-medium text-slate-200">
                             تم تفعيل اشتراكك بنجاح عبر زين العراق.
                         </p>
                     </div>
 
+                    <!-- Offers Section (عروض لعملائنا الكرام) -->
+                    <div class="mb-5 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl p-3.5">
+                        <h4 class="font-black text-xs text-ofoq-dark mb-2.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-gift text-ofoq-brown"></i> عروض لعملائنا الكرام:
+                        </h4>
+                        <div class="space-y-2 text-[11px] font-bold text-slate-700">
+                            <div class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-ofoq-creamcard">
+                                <span class="text-ofoq-dark">خصم التجديد الثاني</span>
+                                <span class="bg-ofoq-cream text-ofoq-dark px-2.5 py-1 rounded-md text-[10px] font-black border border-ofoq-creamcard">تخفيض 20%</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-ofoq-creamcard">
+                                <span class="text-ofoq-dark">دعوة صديق (مشترك جديد)</span>
+                                <span class="bg-ofoq-cream text-ofoq-dark px-2.5 py-1 rounded-md text-[10px] font-black border border-ofoq-creamcard">3 أشهر مجاناً بالعاديبة</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Important Instructions Section (إرشادات هامة للمستخدمين) -->
+                    <div class="mb-5 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl p-3.5">
+                        <h4 class="font-black text-xs text-ofoq-dark mb-2.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation text-ofoq-brown"></i> إرشادات هامة للمستخدمين:
+                        </h4>
+                        <div class="space-y-2 text-[10px] font-medium text-slate-700">
+                            <div class="bg-white p-2.5 rounded-lg border border-ofoq-creamcard">
+                                <span class="font-black text-ofoq-dark block mb-0.5">1. استخدام الـ VPN</span>
+                                <span class="text-slate-600">يُفضل إيقاف برامج الـ VPN أثناء التثبيت والاستخدام لمنع حدوث أي تعارض أمني مع الشهادات.</span>
+                            </div>
+                            <div class="bg-white p-2.5 rounded-lg border border-ofoq-creamcard">
+                                <span class="font-black text-ofoq-dark block mb-0.5">2. سياسة التعويض</span>
+                                <span class="text-slate-600">في حال تم حظر الشهادة بواسطة أبل، تضمن أفق تعويض المشترك فوراً بشهادة جديدة طوال فترة الاشتراك حسب الباقة المختارة.</span>
+                            </div>
+                            <div class="bg-white p-2.5 rounded-lg border border-ofoq-creamcard">
+                                <span class="font-black text-ofoq-dark block mb-0.5">3. جودة التطبيقات</span>
+                                <span class="text-slate-600">نحرص على توفير ملفات آمنة ومستقرة تماماً وتجنب التطبيقات التي تؤثر سلباً على أداء النظام.</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Print / Export Footer Timestamp -->
-                    <div class="mt-6 pt-3 border-t border-dashed border-ofoq-creamcard flex justify-between items-center text-[10px] text-slate-500 font-bold">
+                    <div class="mt-4 pt-3 border-t border-dashed border-ofoq-creamcard flex justify-between items-center text-[10px] text-slate-500 font-bold">
                         <span>إيصال صادر رسمياً عن منصة أفق الرقمية</span>
                         <span>تاريخ الطباعة: <span id="printTimestamp"></span></span>
                     </div>
@@ -557,7 +595,7 @@
                         <button onclick='loadReceiptFromArchive(${index})' class="bg-ofoq-brown hover:bg-ofoq-dark text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="استعراض الوصل">
                             <i class="fa-solid fa-eye"></i>
                         </button>
-                        <button onclick='deleteArchivedItem(${index})' class="bg-red-100 hover:bg-red-200 text-red-700 px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="حذف">
+                        <button onclick='deleteArchivedItem(${index})' class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="حذف">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -586,22 +624,12 @@
         }
 
         function deleteArchivedItem(index) {
-            if (confirm('هل أنت متأكد من حذف هذا الوصل من الأرشيف؟')) {
-                let archive = getStoredArchive();
-                archive.splice(index, 1);
-                localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
-                renderArchiveList();
-            }
+            let archive = getStoredArchive();
+            archive.splice(index, 1);
+            localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
+            renderArchiveList();
         }
 
-        function clearArchive() {
-            if (confirm('تحذير: سيتم مسح كافة الوصولات المحفوظة في الأرشيف نهائياً. هل أنت متأكد؟')) {
-                localStorage.removeItem('ofoq_receipts_archive');
-                renderArchiveList();
-            }
-        }
-
-        // Export Archive as JSON File
         function exportJSONArchive() {
             const archive = getStoredArchive();
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(archive, null, 2));
@@ -613,40 +641,46 @@
             downloadAnchor.remove();
         }
 
-        // Import Archive from JSON File
         function importJSONArchive(event) {
-            const fileReader = new FileReader();
-            if (event.target.files[0]) {
-                fileReader.readAsText(event.target.files[0], "UTF-8");
-                fileReader.onload = (e) => {
-                    try {
-                        const importedData = JSON.parse(e.target.result);
-                        if (Array.isArray(importedData)) {
-                            localStorage.setItem('ofoq_receipts_archive', JSON.stringify(importedData));
-                            renderArchiveList();
-                            alert('تم استيراد أرشيف الوصولات بنجاح!');
-                        } else {
-                            alert('ملف JSON غير صالح.');
-                        }
-                    } catch (error) {
-                        alert('حدث خطأ أثناء قراءة ملف JSON.');
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        localStorage.setItem('ofoq_receipts_archive', JSON.stringify(imported));
+                        renderArchiveList();
+                        alert('تم استيراد الأرشيف بنجاح!');
+                    } else {
+                        alert('ملف غير صالح.');
                     }
-                };
+                } catch (err) {
+                    alert('حدث خطأ أثناء قراءة ملف JSON.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearArchive() {
+            if (confirm('هل أنت متأكد من مسح جميع الوصولات المحفوظة؟')) {
+                localStorage.removeItem('ofoq_receipts_archive');
+                renderArchiveList();
             }
         }
 
-        // Download receipt card as Image (PNG)
+        // Download Receipt as PNG Image using html2canvas
         function downloadAsImage() {
-            const element = document.getElementById('receiptCard');
-            html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
+            const card = document.getElementById('receiptCard');
+            html2canvas(card, { scale: 2, useCORS: true }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `receipt_${document.getElementById('receiptNumber').value}.png`;
+                link.download = `Receipt_${document.getElementById('receiptNumber').value}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             });
         }
 
-        // Initialize on Load
+        // Initialize on load
         window.onload = function() {
             generateReceiptNumber();
             initDateTime();
