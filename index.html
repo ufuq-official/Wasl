@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="referrer" content="no-referrer">
     <title>منصة إصدار وصل الدفع - أفق</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -99,6 +101,43 @@
             border-radius: 3px;
         }
     </style>
+    <!-- Deterrents only: a public page can always be read by a determined person. -->
+    <style>
+        body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        input, textarea, select { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+        img { -webkit-user-drag: none; pointer-events: none; }
+    </style>
+    <script>
+        (function () {
+            // The page only runs as the top window (no embedding inside other sites).
+            if (window.top !== window.self) {
+                try { window.top.location.replace(window.self.location.href); }
+                catch (e) { document.documentElement.style.display = 'none'; }
+            }
+
+            const editable = el => el && el.closest && el.closest('input, textarea, select, [contenteditable="true"]');
+
+            // No right-click menu, dragging or copying outside the form fields.
+            ['contextmenu', 'dragstart', 'copy', 'cut'].forEach(type => {
+                document.addEventListener(type, e => { if (!editable(e.target)) e.preventDefault(); }, true);
+            });
+
+            // Block the shortcuts for developer tools, view source and save page.
+            document.addEventListener('keydown', e => {
+                const code = e.code || '';
+                const mod = e.ctrlKey || e.metaKey;
+                const blocked =
+                    code === 'F12' ||
+                    (mod && e.shiftKey && ['KeyI', 'KeyJ', 'KeyC', 'KeyK'].includes(code)) ||
+                    (mod && e.altKey && ['KeyI', 'KeyJ', 'KeyC', 'KeyU'].includes(code)) ||
+                    (mod && !e.shiftKey && ['KeyU', 'KeyS'].includes(code));
+                if (blocked) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+        })();
+    </script>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
@@ -137,17 +176,20 @@
             
             <!-- Left Panel: Control Form -->
             <section class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-ofoq-creamcard space-y-5 no-print">
-                <div class="border-b border-ofoq-cream pb-3 flex justify-between items-center">
+                <div class="border-b border-ofoq-cream pb-3 flex justify-between items-center gap-3">
                     <div>
                         <h2 class="text-lg font-bold text-ofoq-dark flex items-center gap-2">
                             <i class="fa-solid fa-sliders text-ofoq-brown"></i>
                             لوحة إدخال البيانات والباقات
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">تعبئة البيانات والباقات مع الحفظ التلقائي</p>
+                        <p id="autosaveStatus" class="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-cloud-arrow-up text-ofoq-lightbrown"></i>
+                            <span>يُحفظ الوصل في الأرشيف تلقائياً بعد كتابة اسم العميل</span>
+                        </p>
                     </div>
-                    <button type="button" onclick="saveCurrentReceipt()" title="حفظ الوصل الحالي في الأرشيف"
-                        class="bg-ofoq-dark hover:bg-ofoq-brown text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-bookmark"></i> حفظ للأرشيف
+                    <button type="button" onclick="newReceipt()" title="بدء وصل جديد (الوصل الحالي محفوظ تلقائياً)"
+                        class="bg-ofoq-dark hover:bg-ofoq-brown text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0">
+                        <i class="fa-solid fa-plus"></i> وصل جديد
                     </button>
                 </div>
 
@@ -157,60 +199,54 @@
                         <label class="block text-xs font-bold text-ofoq-dark mb-1">اسم العميل</label>
                         <div class="relative">
                             <i class="fa-solid fa-user absolute right-3 top-1/2 -translate-y-1/2 text-ofoq-lightbrown text-sm"></i>
-                            <input type="text" id="customerName" placeholder="أدخل اسم العميل الكامل" 
+                            <input type="text" id="customerName" placeholder="أدخل اسم العميل الكامل" autocomplete="off"
                                 class="w-full pr-9 pl-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition"
-                                oninput="updateReceipt()">
+                                oninput="onFieldChange()">
                         </div>
                     </div>
 
                     <!-- Receipt Serial Number -->
                     <div>
                         <label class="block text-xs font-bold text-ofoq-dark mb-1">رقم الوصل (تلقائي)</label>
-                        <div class="flex gap-2">
-                            <div class="relative flex-1">
-                                <i class="fa-solid fa-hashtag absolute right-3 top-1/2 -translate-y-1/2 text-ofoq-lightbrown text-sm"></i>
-                                <input type="text" id="receiptNumber" readonly 
-                                    class="w-full pr-9 pl-3 py-2 bg-ofoq-cream border border-ofoq-creamcard rounded-xl text-sm font-mono font-bold text-ofoq-dark cursor-not-allowed">
-                            </div>
-                            <button type="button" onclick="generateReceiptNumber()" title="توليد رقم جديد"
-                                class="px-3 py-2 bg-ofoq-cream hover:bg-ofoq-creamcard border border-ofoq-creamcard rounded-xl text-ofoq-dark transition">
-                                <i class="fa-solid fa-rotate"></i>
+                        <div class="relative">
+                            <i class="fa-solid fa-hashtag absolute right-3 top-1/2 -translate-y-1/2 text-ofoq-lightbrown text-sm"></i>
+                            <input type="text" id="receiptNumber" readonly
+                                class="w-full pr-9 pl-3 py-2 bg-ofoq-cream border border-ofoq-creamcard rounded-xl text-sm font-mono font-bold text-ofoq-dark cursor-not-allowed">
+                        </div>
+                    </div>
+
+                    <!-- Date & Time: filled automatically with the moment the receipt is issued -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-bold text-ofoq-dark">تاريخ ووقت إصدار الوصل (تلقائي)</label>
+                            <button type="button" id="editDateButton" onclick="toggleDateEditing()"
+                                class="text-[11px] font-bold text-ofoq-lightbrown hover:text-ofoq-dark transition flex items-center gap-1">
+                                <i class="fa-solid fa-pen"></i> <span>تعديل</span>
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Date & Time -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-ofoq-dark mb-1">تاريخ اليوم</label>
-                            <input type="date" id="receiptDate" 
-                                class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition"
-                                onchange="updateReceipt()">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="date" id="receiptDate" readonly
+                                class="w-full px-3 py-2 bg-ofoq-cream border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition"
+                                onchange="onDateEdited()">
+                            <input type="time" id="receiptTime" readonly
+                                class="w-full px-3 py-2 bg-ofoq-cream border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition"
+                                onchange="onDateEdited()">
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-ofoq-dark mb-1">الوقت</label>
-                            <input type="time" id="receiptTime" 
-                                class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition"
-                                onchange="updateReceipt()">
-                        </div>
-                    </div>
-
-                    <!-- Payment Method Selector -->
-                    <div>
-                        <label class="block text-xs font-bold text-ofoq-dark mb-1">طريقة الدفع</label>
-                        <select id="paymentMethod" onchange="updateReceipt()"
-                            class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
-                            <option value="زين العراق">زين العراق (Zain Cash)</option>
-                            <option value="كي كارد">كي كارد (Qi Card)</option>
-                            <option value="رصيد موبايل">رصيد موبايل (Mobile Credit)</option>
-                            <option value="تحويل بنكي">تحويل بنكي</option>
-                        </select>
+                        <p class="mt-1 text-[11px] font-bold text-slate-500">تاريخ انتهاء الشهادة ونهاية الضمان يُحسبان تلقائياً من هذا التاريخ.</p>
                     </div>
 
                     <!-- Country Selector (drives automatic local pricing) -->
                     <div>
                         <label class="block text-xs font-bold text-ofoq-dark mb-1">دولة العميل (تحوّل السعر تلقائياً)</label>
-                        <select id="country" onchange="updateReceipt()"
+                        <select id="country" onchange="onCountryChange()"
+                            class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
+                        </select>
+                    </div>
+
+                    <!-- Payment Method Selector: the same methods as the official site -->
+                    <div>
+                        <label class="block text-xs font-bold text-ofoq-dark mb-1">طريقة الدفع</label>
+                        <select id="paymentMethod" onchange="onPricingChange()"
                             class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
                         </select>
                     </div>
@@ -218,35 +254,34 @@
 
                 <!-- Packages Selection Section -->
                 <div class="border-t border-ofoq-cream pt-3 space-y-3">
-                    <label class="block text-xs font-bold text-ofoq-dark">اختيار الباقة والمدة</label>
-                    
+                    <label class="block text-xs font-bold text-ofoq-dark">الاشتراك والضمان</label>
+
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 mb-1">نوع الباقة</label>
-                            <select id="packageType" onchange="updateReceipt()"
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">مدة الاشتراك</label>
+                            <select id="packageDuration" onchange="onDurationChange()"
                                 class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
-                                <option value="الاعتيادية">الباقة الاعتيادية (Standard)</option>
-                                <option value="بلس">باقة بلس (Plus)</option>
-                                <option value="ماكس">باقة ماكس (Max)</option>
+                                <option value="12">سنة كاملة</option>
+                                <option value="3">3 أشهر</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 mb-1">مدة الاشتراك</label>
-                            <select id="packageDuration" onchange="updateReceipt()"
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">الضمان</label>
+                            <select id="packageWarranty" onchange="onPricingChange()"
                                 class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
-                                <option value="3 أشهر">3 أشهر</option>
-                                <option value="6 أشهر">6 أشهر</option>
-                                <option value="سنة">سنة كاملة</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Base Price (USD) + live converted local price -->
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-600 mb-1">سعر الاشتراك الأساسي ($ دولار)</label>
-                        <input type="number" id="packagePrice" value="15" min="0" max="100000" step="0.01" oninput="updateReceipt()"
-                            class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition">
-                        <p class="mt-1.5 text-[11px] font-bold text-ofoq-brown flex items-center gap-1.5">
+                    <!-- Fixed price: comes from the price list, never typed -->
+                    <div class="bg-ofoq-cream border border-ofoq-creamcard rounded-xl px-3 py-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+                                <i class="fa-solid fa-lock text-ofoq-lightbrown"></i> سعر الاشتراك (ثابت)
+                            </span>
+                            <span id="priceUSDPreview" class="font-mono font-black text-ofoq-dark text-sm">—</span>
+                        </div>
+                        <p class="mt-1 text-[11px] font-bold text-ofoq-brown flex items-center gap-1.5">
                             <i class="fa-solid fa-coins"></i>
                             <span id="localPricePreview">—</span>
                         </p>
@@ -255,9 +290,9 @@
                     <!-- Notes Field -->
                     <div>
                         <label class="block text-xs font-bold text-ofoq-dark mb-1">ملاحظات العميل / الطلب</label>
-                        <textarea id="customerNotes" rows="2" placeholder="أضف أي ملاحظات خاصة بالعميل أو تفاصيل الحساب..." 
+                        <textarea id="customerNotes" rows="2" placeholder="أضف أي ملاحظات خاصة بالعميل أو تفاصيل الحساب..."
                             class="w-full px-3 py-2 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-ofoq-brown transition"
-                            oninput="updateReceipt()"></textarea>
+                            oninput="onFieldChange()"></textarea>
                     </div>
                 </div>
 
@@ -336,8 +371,8 @@
                         <span class="text-xs font-bold text-ofoq-dark bg-ofoq-cream px-2.5 py-1 rounded-md border border-ofoq-creamcard">عملية موثوقة</span>
                     </div>
 
-                    <!-- Certificate Validity (issue + expiry) -->
-                    <div class="mb-5 grid grid-cols-2 gap-3">
+                    <!-- Certificate Validity (issue + expiry + warranty end), all computed from the issue date -->
+                    <div class="mb-5 grid grid-cols-3 gap-2.5">
                         <div class="bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl p-3">
                             <span class="block text-[11px] font-bold text-ofoq-lightbrown mb-0.5"><i class="fa-solid fa-certificate ml-1"></i> تاريخ إصدار الشهادة</span>
                             <span id="viewCertStart" class="font-black text-ofoq-dark text-xs">---</span>
@@ -346,6 +381,10 @@
                             <span class="block text-[11px] font-bold text-ofoq-lightbrown mb-0.5"><i class="fa-solid fa-hourglass-end ml-1"></i> تاريخ انتهاء الشهادة</span>
                             <span id="viewCertEnd" class="font-black text-ofoq-dark text-xs">---</span>
                         </div>
+                        <div class="bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl p-3">
+                            <span class="block text-[11px] font-bold text-ofoq-lightbrown mb-0.5"><i class="fa-solid fa-shield-halved ml-1"></i> نهاية الضمان</span>
+                            <span id="viewWarrantyEnd" class="font-black text-ofoq-dark text-xs">---</span>
+                        </div>
                     </div>
 
                     <!-- Package Details Table -->
@@ -353,18 +392,22 @@
                         <table class="w-full text-right border-collapse">
                             <thead>
                                 <tr class="border-b-2 border-ofoq-cream text-ofoq-dark text-xs font-black">
-                                    <th class="py-2 px-2">تفاصيل الباقة والاشتراك</th>
-                                    <th class="py-2 px-2 text-center">المدة</th>
+                                    <th class="py-2 px-2">تفاصيل الاشتراك</th>
+                                    <th class="py-2 px-2 text-center">مدة الاشتراك</th>
+                                    <th class="py-2 px-2 text-center">الضمان</th>
                                     <th class="py-2 px-2 text-left">المبلغ</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-ofoq-cream text-xs font-bold text-slate-800">
                                 <tr>
-                                    <td class="py-3 px-2 font-black text-ofoq-dark">
-                                        باقة <span id="viewPackageType">الاعتيادية</span>
-                                    </td>
-                                    <td id="viewPackageDuration" class="py-3 px-2 text-center font-mono font-bold">3 أشهر</td>
-                                    <td id="viewPackagePrice" class="py-3 px-2 text-left font-mono font-black text-ofoq-dark">$15.00</td>
+                                    <td id="viewPackageTitle" class="py-3 px-2 font-black text-ofoq-dark">شهادة أفق</td>
+                                    <td id="viewPackageDuration" class="py-3 px-2 text-center font-bold">سنة كاملة</td>
+                                    <td id="viewPackageWarranty" class="py-3 px-2 text-center font-bold">6 أشهر</td>
+                                    <td id="viewPackagePrice" class="py-3 px-2 text-left font-mono font-black text-ofoq-dark">—</td>
+                                </tr>
+                                <tr id="viewFeeRow" class="hidden">
+                                    <td colspan="3" class="py-2.5 px-2 font-bold text-slate-600">رسوم التحويل (<span id="viewFeeMethod"></span>)</td>
+                                    <td id="viewFeeAmount" class="py-2.5 px-2 text-left font-mono font-black text-ofoq-dark">—</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -509,6 +552,8 @@
             }[c]));
         }
 
+        const $ = id => document.getElementById(id);
+
         // Format an ISO date (YYYY-MM-DD) as a readable Gregorian Arabic date
         function formatArabicDate(iso) {
             try {
@@ -520,7 +565,7 @@
 
         // (Re)build the verification QR with a short summary of the current receipt
         function updateReceiptQR(summary) {
-            const el = document.getElementById('receiptQR');
+            const el = $('receiptQR');
             if (!el || typeof QRCode === 'undefined') return;
             const make = (text) => new QRCode(el, {
                 text: text,
@@ -534,84 +579,257 @@
             try {
                 make(summary);
             } catch (e) {
-                // Arabic text is multi-byte; if the summary still overflows the QR capacity,
-                // fall back to just the receipt number so the code never breaks the page.
-                console.warn('QR summary too long, using fallback:', e);
                 el.innerHTML = '';
-                try { make(document.getElementById('receiptNumber').value || 'OFOQ'); } catch (e2) {}
+                try { make($('receiptNumber').value || 'OFOQ'); } catch (e2) {}
             }
         }
 
-        // Auto Generate Random Receipt Serial Number
-        function generateReceiptNumber() {
-            const prefix = "OFOQ-";
-            const randomNum = Math.floor(100000 + Math.random() * 900000);
-            document.getElementById('receiptNumber').value = prefix + randomNum;
-            updateReceipt();
-        }
-
-        // Initialize Date & Time Defaults
-        function initDateTime() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            document.getElementById('receiptDate').value = `${year}-${month}-${day}`;
-
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('receiptTime').value = `${hours}:${minutes}`;
-        }
-
-        // دول العملاء وعملاتها وسعر الصرف مقابل 1 دولار أمريكي.
-        // العراق مثبّت على 1520 (السعر الرسمي). باقي الأسعار تقريبية — عدّلها عند تغيّر السوق.
-        const COUNTRIES = {
-            'العراق':            { cur: 'د.ع', rate: 1520,  dec: 0 },
-            'السعودية':          { cur: 'ر.س', rate: 3.75,  dec: 2 },
-            'الإمارات':          { cur: 'د.إ', rate: 3.67,  dec: 2 },
-            'الكويت':            { cur: 'د.ك', rate: 0.307, dec: 3 },
-            'قطر':               { cur: 'ر.ق', rate: 3.64,  dec: 2 },
-            'البحرين':           { cur: 'د.ب', rate: 0.376, dec: 3 },
-            'عُمان':             { cur: 'ر.ع', rate: 0.385, dec: 3 },
-            'الأردن':            { cur: 'د.أ', rate: 0.709, dec: 2 },
-            'مصر':               { cur: 'ج.م', rate: 49,    dec: 2 },
-            'لبنان':             { cur: 'ل.ل', rate: 89000, dec: 0 },
-            'سوريا':             { cur: 'ل.س', rate: 13000, dec: 0 },
-            'اليمن':             { cur: 'ر.ي', rate: 530,   dec: 0 },
-            'المغرب':            { cur: 'د.م', rate: 10,    dec: 2 },
-            'الجزائر':           { cur: 'د.ج', rate: 134,   dec: 0 },
-            'تونس':              { cur: 'د.ت', rate: 3.1,   dec: 2 },
-            'ليبيا':             { cur: 'د.ل', rate: 4.85,  dec: 2 },
-            'السودان':           { cur: 'ج.س', rate: 600,   dec: 0 },
-            'فلسطين':            { cur: '₪',   rate: 3.7,   dec: 2 },
-            'الولايات المتحدة':  { cur: '$',   rate: 1,     dec: 2 },
-            'أوروبا':            { cur: '€',   rate: 0.92,  dec: 2 },
-            'تركيا':             { cur: '₺',   rate: 34,    dec: 2 }
+        // ================= قائمة الأسعار (نفس باقات الموقع الرسمي) =================
+        // السعر ثابت: يُؤخذ من هذه القائمة ولا يُكتب باليد.
+        // شهادة السنة: السعر حسب مدة الضمان. شهادة الـ 3 أشهر: ضمان كامل طوال مدتها.
+        const PRICE_LIST = {
+            12: { label: 'سنة كاملة', defaultWarranty: 6, warranties: { 1: 7, 2: 10, 3: 15, 6: 20, 10: 25, 12: 30 } },
+            3:  { label: '3 أشهر',   defaultWarranty: 3, warranties: { 3: 7 }, fullWarranty: true }
         };
 
+        function monthsText(n) {
+            const names = { 1: 'شهر واحد', 2: 'شهران', 12: '12 شهراً' };
+            return names[n] || `${n} أشهر`;
+        }
+
+        function warrantyText(duration, warranty) {
+            const plan = PRICE_LIST[duration];
+            if (plan && plan.fullWarranty) return `${monthsText(warranty)} (ضمان كامل)`;
+            return monthsText(warranty);
+        }
+
+        // ================= طرق الدفع (نفس طرق الموقع الرسمي) =================
+        const PAYMENT_METHODS = {
+            IQ: {
+                title: 'داخل العراق',
+                methods: [
+                    { name: 'سوبر كي (Super Key)', fee: 0 },
+                    { name: 'ماستر كارد (Mastercard)', fee: 0 },
+                    { name: 'زين كاش (Zain Cash)', fee: 0 },
+                    { name: 'رصيد زين العراق', fee: 2 }
+                ]
+            },
+            INTL: {
+                title: 'خارج العراق',
+                methods: [
+                    { name: 'البطاقات البنكية (Visa / Mastercard / Apple Pay)', fee: 2 },
+                    { name: 'العملات الرقمية (USDT - Binance)', fee: 2 },
+                    { name: 'ويسترن يونيون (Western Union)', fee: 2 },
+                    { name: 'زين كاش (Zain Cash)', fee: 0 }
+                ]
+            }
+        };
+
+        // ================= الدول وأسعار الصرف =================
+        // سعر الصرف لكل دولة هو الأعلى بين الوصولات والموقع الرسمي، والسعر يُقرّب للأعلى مثل الموقع الرسمي.
+        // العراق مثبّت على 1520 دينار للدولار. الدول المكتوب عندها fixed عملتها مربوطة بالدولار.
+        const COUNTRIES = [
+            { id: 'IQ', name: 'العراق', flag: '🇮🇶', cur: 'IQD', symbol: 'د.ع', rate: 1520, step: 1, dec: 0, fixed: true },
+            { id: 'SA', name: 'السعودية', flag: '🇸🇦', cur: 'SAR', symbol: 'ر.س', rate: 3.75, step: 1, dec: 2, fixed: true },
+            { id: 'AE', name: 'الإمارات', flag: '🇦🇪', cur: 'AED', symbol: 'د.إ', rate: 3.6725, step: 1, dec: 2, fixed: true },
+            { id: 'KW', name: 'الكويت', flag: '🇰🇼', cur: 'KWD', symbol: 'د.ك', rate: 0.307, step: 0.05, dec: 3 },
+            { id: 'QA', name: 'قطر', flag: '🇶🇦', cur: 'QAR', symbol: 'ر.ق', rate: 3.64, step: 1, dec: 2, fixed: true },
+            { id: 'BH', name: 'البحرين', flag: '🇧🇭', cur: 'BHD', symbol: 'د.ب', rate: 0.376, step: 0.05, dec: 3, fixed: true },
+            { id: 'OM', name: 'عُمان', flag: '🇴🇲', cur: 'OMR', symbol: 'ر.ع', rate: 0.385, step: 0.05, dec: 3, fixed: true },
+            { id: 'JO', name: 'الأردن', flag: '🇯🇴', cur: 'JOD', symbol: 'د.أ', rate: 0.709, step: 0.05, dec: 3, fixed: true },
+            { id: 'LB', name: 'لبنان', flag: '🇱🇧', cur: 'LBP', symbol: 'ل.ل', rate: 89500, step: 5000, dec: 0 },
+            { id: 'SY', name: 'سوريا', flag: '🇸🇾', cur: 'USD', symbol: '$', rate: 1, step: 1, dec: 2 },
+            { id: 'PS', name: 'فلسطين', flag: '🇵🇸', cur: 'ILS', symbol: '₪', rate: 3.7, step: 1, dec: 2 },
+            { id: 'EG', name: 'مصر', flag: '🇪🇬', cur: 'EGP', symbol: 'ج.م', rate: 49, step: 5, dec: 0 },
+            { id: 'LY', name: 'ليبيا', flag: '🇱🇾', cur: 'LYD', symbol: 'د.ل', rate: 5.4, step: 1, dec: 2 },
+            { id: 'TN', name: 'تونس', flag: '🇹🇳', cur: 'TND', symbol: 'د.ت', rate: 3.1, step: 0.5, dec: 2 },
+            { id: 'DZ', name: 'الجزائر', flag: '🇩🇿', cur: 'DZD', symbol: 'د.ج', rate: 134, step: 10, dec: 0 },
+            { id: 'MA', name: 'المغرب', flag: '🇲🇦', cur: 'MAD', symbol: 'د.م', rate: 10, step: 1, dec: 2 },
+            { id: 'MR', name: 'موريتانيا', flag: '🇲🇷', cur: 'MRU', symbol: 'أ.م', rate: 40, step: 5, dec: 0 },
+            { id: 'SD', name: 'السودان', flag: '🇸🇩', cur: 'USD', symbol: '$', rate: 1, step: 1, dec: 2 },
+            { id: 'YE', name: 'اليمن', flag: '🇾🇪', cur: 'USD', symbol: '$', rate: 1, step: 1, dec: 2 },
+            { id: 'SO', name: 'الصومال', flag: '🇸🇴', cur: 'USD', symbol: '$', rate: 1, step: 1, dec: 2 },
+            { id: 'DJ', name: 'جيبوتي', flag: '🇩🇯', cur: 'DJF', symbol: 'ف.ج', rate: 177.72, step: 50, dec: 0, fixed: true },
+            { id: 'KM', name: 'جزر القمر', flag: '🇰🇲', cur: 'KMF', symbol: 'ف.ق', rate: 425, step: 100, dec: 0 },
+            { id: 'TR', name: 'تركيا', flag: '🇹🇷', cur: 'TRY', symbol: '₺', rate: 34, step: 1, dec: 2 },
+            { id: 'EU', name: 'أوروبا', flag: '🇪🇺', cur: 'EUR', symbol: '€', rate: 0.92, step: 1, dec: 2 },
+            { id: 'US', name: 'الولايات المتحدة', flag: '🇺🇸', cur: 'USD', symbol: '$', rate: 1, step: 1, dec: 2 },
+            { id: 'OTHER', name: 'دولة أخرى', flag: '🌍', cur: 'USD', symbol: '$', rate: 1, step: 1, dec: 2 }
+        ];
+        COUNTRIES.forEach(c => { c.baseRate = c.rate; });
+
+        function countryById(id) {
+            return COUNTRIES.find(c => c.id === id) || COUNTRIES[0];
+        }
+
+        function countryByName(name) {
+            return COUNTRIES.find(c => c.name === name) || COUNTRIES[0];
+        }
+
         function formatMoney(amount, dec) {
-            return (Number(amount) || 0).toLocaleString('en-US', {
-                minimumFractionDigits: dec, maximumFractionDigits: dec
+            return (Number(amount) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: dec });
+        }
+
+        // المبلغ بعملة الدولة، مقرّباً للأعلى (مثل الموقع الرسمي).
+        function localAmount(usd, country) {
+            if (country.cur === 'USD') return usd;
+            const step = country.step || 1;
+            return Math.ceil((usd * country.rate) / step - 1e-9) * step;
+        }
+
+        // A dollar amount kept left-to-right inside Arabic text.
+        function usdText(amount) {
+            return '\u2066$' + formatMoney(amount, 2) + '\u2069';
+        }
+
+        function moneyText(amount, country) {
+            if (country.cur === 'USD') return '$' + formatMoney(amount, 2);
+            return `${formatMoney(amount, country.dec)} ${country.symbol}`;
+        }
+
+        // أسعار الصرف الحية لنفس العملات (نفس مصدر الموقع الرسمي). يُعتمد الأعلى دائماً.
+        const RATES_CACHE_KEY = 'ofoq_wasl_rates_v1';
+        const RATES_URLS = [
+            'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.min.json',
+            'https://latest.currency-api.pages.dev/v1/currencies/usd.min.json'
+        ];
+
+        function applyLiveRates(rates) {
+            COUNTRIES.forEach(c => {
+                if (c.fixed || c.cur === 'USD') return;
+                const live = Number(rates[c.cur.toLowerCase()]);
+                if (live > c.baseRate / 3 && live < c.baseRate * 3) c.rate = Math.max(c.baseRate, live);
             });
         }
 
-        // سعر الاشتراك بعملة الدولة المختارة = السعر بالدولار × سعر الصرف
-        function localPrice(usd, info) {
-            return `${formatMoney(usd * info.rate, info.dec)} ${info.cur}`;
+        async function loadLiveRates() {
+            try {
+                const cached = JSON.parse(localStorage.getItem(RATES_CACHE_KEY) || 'null');
+                if (cached && cached.rates && Date.now() - cached.time < 12 * 60 * 60 * 1000) {
+                    applyLiveRates(cached.rates);
+                    updateReceipt();
+                    return;
+                }
+            } catch (e) {}
+            for (const url of RATES_URLS) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) continue;
+                    const json = await response.json();
+                    if (!json || !json.usd) continue;
+                    const rates = {};
+                    COUNTRIES.forEach(c => {
+                        const key = c.cur.toLowerCase();
+                        if (json.usd[key]) rates[key] = json.usd[key];
+                    });
+                    applyLiveRates(rates);
+                    try { localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({ time: Date.now(), rates })); } catch (e) {}
+                    updateReceipt();
+                    return;
+                } catch (e) {}
+            }
         }
 
+        // ================= بناء القوائم =================
         function buildCountryOptions() {
-            const sel = document.getElementById('country');
-            if (!sel) return;
-            sel.innerHTML = Object.keys(COUNTRIES).map(c => `<option value="${c}">${c}</option>`).join('');
-            sel.value = 'العراق';
+            $('country').innerHTML = COUNTRIES
+                .map(c => `<option value="${c.id}">${c.flag} ${esc(c.name)}</option>`)
+                .join('');
+            $('country').value = 'IQ';
         }
 
-        // تحويل مدة الاشتراك إلى عدد أشهر (لحساب تاريخ انتهاء الشهادة)
+        function buildPaymentOptions() {
+            const select = $('paymentMethod');
+            select.innerHTML = Object.entries(PAYMENT_METHODS).map(([region, group]) => `
+                <optgroup label="${esc(group.title)}">
+                    ${group.methods.map((m, i) => `<option value="${region}:${i}">${esc(m.name)}${m.fee ? ` (رسوم ${usdText(m.fee)})` : ''}</option>`).join('')}
+                </optgroup>`).join('');
+            select.value = 'IQ:0';
+        }
+
+        function buildWarrantyOptions(duration, selected) {
+            const plan = PRICE_LIST[duration] || PRICE_LIST[12];
+            const select = $('packageWarranty');
+            select.innerHTML = Object.keys(plan.warranties)
+                .map(w => `<option value="${w}">${esc(warrantyText(duration, Number(w)))} — $${plan.warranties[w]}</option>`)
+                .join('');
+            const value = String(selected && plan.warranties[selected] != null ? selected : plan.defaultWarranty);
+            select.value = value;
+            select.disabled = Object.keys(plan.warranties).length === 1;
+        }
+
+        // The selected payment method: { name, fee }. Methods from older receipts stay selectable.
+        function selectedMethod() {
+            const value = $('paymentMethod').value || 'IQ:0';
+            if (value.startsWith('legacy:')) return { name: value.slice(7), fee: 0 };
+            const [region, index] = value.split(':');
+            const group = PAYMENT_METHODS[region] || PAYMENT_METHODS.IQ;
+            return group.methods[Number(index)] || group.methods[0];
+        }
+
+        function selectMethodByName(name) {
+            const select = $('paymentMethod');
+            for (const [region, group] of Object.entries(PAYMENT_METHODS)) {
+                const index = group.methods.findIndex(m => m.name === name);
+                if (index >= 0) { select.value = `${region}:${index}`; return; }
+            }
+            if (!name) return;
+            let legacy = select.querySelector('optgroup[data-legacy]');
+            if (!legacy) {
+                legacy = document.createElement('optgroup');
+                legacy.label = 'طرق سابقة';
+                legacy.setAttribute('data-legacy', '1');
+                select.appendChild(legacy);
+            }
+            const value = 'legacy:' + name;
+            if (![...legacy.children].some(o => o.value === value)) {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = name;
+                legacy.appendChild(option);
+            }
+            select.value = value;
+        }
+
+        // ================= التاريخ والوقت التلقائي =================
+        let dateEdited = false;   // the date/time were changed by hand
+        let dateEditing = false;  // the date/time fields are unlocked
+        let isSaved = false;      // the current receipt is in the archive
+        let frozen = null;        // amounts of a receipt opened from the archive, shown as they were issued
+
+        function setDateTimeNow() {
+            const now = new Date();
+            $('receiptDate').value = toISODate(now);
+            $('receiptTime').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        }
+
+        function setDateEditing(on) {
+            dateEditing = on;
+            ['receiptDate', 'receiptTime'].forEach(id => {
+                const el = $(id);
+                el.readOnly = !on;
+                el.classList.toggle('bg-ofoq-cream', !on);
+                el.classList.toggle('bg-ofoq-creamlight', on);
+            });
+            $('editDateButton').querySelector('span').textContent = on ? 'تم' : 'تعديل';
+            $('editDateButton').querySelector('i').className = on ? 'fa-solid fa-check' : 'fa-solid fa-pen';
+        }
+
+        function toggleDateEditing() {
+            setDateEditing(!dateEditing);
+        }
+
+        function onDateEdited() {
+            dateEdited = true;
+            onFieldChange();
+        }
+
         function durationToMonths(d) {
-            if (d.indexOf('6') >= 0) return 6;
-            if (d.indexOf('3') >= 0) return 3;
-            return 12; // سنة كاملة
+            if (typeof d === 'number') return d;
+            const text = String(d || '');
+            if (text.indexOf('6') >= 0) return 6;
+            if (text.indexOf('3') >= 0) return 3;
+            return 12;
         }
 
         function addMonths(date, months) {
@@ -629,116 +847,253 @@
             return `${y}-${m}-${day}`;
         }
 
+        // ================= رقم الوصل =================
+        function generateReceiptNumber() {
+            const taken = new Set(getStoredArchive().map(r => r.receiptNumber));
+            let number;
+            do {
+                number = 'OFOQ-' + Math.floor(100000 + Math.random() * 900000);
+            } while (taken.has(number));
+            $('receiptNumber').value = number;
+        }
+
+        // ================= حساب الوصل الحالي =================
+        function currentPricing() {
+            const country = countryById($('country').value);
+            const duration = Number($('packageDuration').value) || 12;
+            const plan = PRICE_LIST[duration] || PRICE_LIST[12];
+            const warranty = Number($('packageWarranty').value) || plan.defaultWarranty;
+            const priceUSD = plan.warranties[warranty] != null ? plan.warranties[warranty] : plan.warranties[plan.defaultWarranty];
+            const method = selectedMethod();
+            const feeUSD = method.fee || 0;
+
+            const price = localAmount(priceUSD, country);
+            const fee = feeUSD ? localAmount(feeUSD, country) : 0;
+            const rateNote = country.cur === 'USD'
+                ? `السعر بالدولار الأمريكي • الأساس: ${usdText(priceUSD)}${feeUSD ? ` + رسوم ${usdText(feeUSD)}` : ''}`
+                : `سعر الصرف: 1 دولار = ${formatMoney(country.rate, country.rate < 10 ? 3 : 0)} ${country.symbol} • الأساس: ${usdText(priceUSD)}${feeUSD ? ` + رسوم ${usdText(feeUSD)}` : ''}`;
+
+            return {
+                country, duration, warranty, priceUSD, feeUSD, method,
+                totalUSD: priceUSD + feeUSD,
+                localPrice: moneyText(price, country),
+                localFee: feeUSD ? moneyText(fee, country) : '',
+                localTotal: moneyText(price + fee, country),
+                rateNote,
+                title: plan.fullWarranty ? 'اشتراك شهادة أفق (ضمان كامل)' : 'اشتراك شهادة أفق',
+                durationText: plan.label,
+                warrantyText: warrantyText(duration, warranty)
+            };
+        }
+
         // Update Live Receipt Preview
         function updateReceipt() {
-            const customerName = document.getElementById('customerName').value.trim();
-            document.getElementById('viewCustomerName').textContent = customerName || 'عميلنا العزيز';
+            const customerName = $('customerName').value.trim();
+            $('viewCustomerName').textContent = customerName || 'عميلنا العزيز';
+            $('viewReceiptNumber').textContent = $('receiptNumber').value;
 
-            document.getElementById('viewReceiptNumber').textContent = document.getElementById('receiptNumber').value;
+            const rawDate = $('receiptDate').value;
+            const rawTime = $('receiptTime').value;
+            $('viewDate').textContent = rawDate ? formatArabicDate(rawDate) : '--/--/----';
+            $('viewTime').textContent = rawTime || '--:--';
 
-            const rawDate = document.getElementById('receiptDate').value;
-            const rawTime = document.getElementById('receiptTime').value;
-            document.getElementById('viewDate').textContent = rawDate ? formatArabicDate(rawDate) : '--/--/----';
-            document.getElementById('viewTime').textContent = rawTime || '--:--';
+            const pricing = Object.assign(currentPricing(), frozen || {});
+            $('viewCountry').textContent = pricing.countryName || pricing.country.name;
+            $('viewPaymentMethod').textContent = pricing.methodName || pricing.method.name;
+            $('viewFooterConfirmation').textContent = `تم تفعيل اشتراكك بنجاح عبر ${pricing.methodName || pricing.method.name}.`;
 
-            const method = document.getElementById('paymentMethod').value;
-            document.getElementById('viewPaymentMethod').textContent = method;
-            document.getElementById('viewFooterConfirmation').textContent = `تم تفعيل اشتراكك بنجاح عبر ${method}.`;
+            $('viewPackageTitle').textContent = pricing.title;
+            $('viewPackageDuration').textContent = pricing.durationText;
+            $('viewPackageWarranty').textContent = pricing.warrantyText;
+            $('viewPackagePrice').textContent = pricing.localPrice;
+            $('viewFeeRow').classList.toggle('hidden', !pricing.localFee);
+            $('viewFeeMethod').textContent = pricing.methodName || pricing.method.name;
+            $('viewFeeAmount').textContent = pricing.localFee || '';
+            $('viewTotalAmount').textContent = pricing.localTotal;
+            $('viewRateNote').textContent = pricing.rateNote || '';
 
-            // Package Details
-            const pkgType = document.getElementById('packageType').value;
-            const pkgDuration = document.getElementById('packageDuration').value;
-            let pkgPrice = parseFloat(document.getElementById('packagePrice').value) || 0;
+            $('priceUSDPreview').textContent = usdText(pricing.priceUSD) + (pricing.feeUSD ? ` + رسوم ${usdText(pricing.feeUSD)}` : '');
+            $('localPricePreview').textContent = frozen
+                ? `محفوظ كما صدر: ${pricing.localTotal}`
+                : `السعر في ${pricing.country.name}: ${pricing.localTotal}${pricing.feeUSD ? ` (يشمل رسوم ${usdText(pricing.feeUSD)})` : ''}`;
 
-            document.getElementById('viewPackageType').textContent = pkgType;
-            document.getElementById('viewPackageDuration').textContent = pkgDuration;
-
-            // Automatic local price by selected country (Iraq official rate = 1520 IQD/USD)
-            const countryName = document.getElementById('country').value || 'العراق';
-            const info = COUNTRIES[countryName] || COUNTRIES['العراق'];
-            const localStr = localPrice(pkgPrice, info);
-            document.getElementById('viewCountry').textContent = countryName;
-            document.getElementById('viewPackagePrice').textContent = localStr;
-            document.getElementById('viewTotalAmount').textContent = localStr;
-            document.getElementById('localPricePreview').textContent =
-                `السعر في ${countryName}: ${localStr} (أساس $${pkgPrice.toFixed(2)})`;
-            document.getElementById('viewRateNote').textContent =
-                info.rate === 1 ? '' : `سعر الصرف: 1 دولار = ${formatMoney(info.rate, info.rate < 10 ? 3 : 0)} ${info.cur} • الأساس: $${pkgPrice.toFixed(2)}`;
-
-            // Certificate validity: issue = receipt date, expiry = issue + subscription duration
+            // Certificate validity: issue = receipt date, expiry = issue + subscription, warranty end = issue + warranty
             const certStart = rawDate ? new Date(rawDate + 'T00:00:00') : new Date();
-            const certEnd = addMonths(certStart, durationToMonths(pkgDuration));
-            document.getElementById('viewCertStart').textContent = formatArabicDate(toISODate(certStart));
-            document.getElementById('viewCertEnd').textContent = formatArabicDate(toISODate(certEnd));
+            const durationMonths = durationToMonths(pricing.durationMonths || pricing.duration);
+            $('viewCertStart').textContent = formatArabicDate(toISODate(certStart));
+            $('viewCertEnd').textContent = formatArabicDate(toISODate(addMonths(certStart, durationMonths)));
+            const warrantyMonths = pricing.warrantyMonths != null ? pricing.warrantyMonths : pricing.warranty;
+            $('viewWarrantyEnd').textContent = warrantyMonths
+                ? formatArabicDate(toISODate(addMonths(certStart, warrantyMonths)))
+                : '---';
 
             // Notes Section
-            const notes = document.getElementById('customerNotes').value.trim();
-            const notesView = document.getElementById('notesSectionView');
-            const notesTextView = document.getElementById('viewCustomerNotesText');
-            if (notes) {
-                notesView.classList.remove('hidden');
-                notesTextView.textContent = notes;
-            } else {
-                notesView.classList.add('hidden');
-            }
+            const notes = $('customerNotes').value.trim();
+            $('notesSectionView').classList.toggle('hidden', !notes);
+            $('viewCustomerNotesText').textContent = notes;
 
             const now = new Date();
-            document.getElementById('printTimestamp').textContent = now.toLocaleDateString('ar-EG') + ' - ' + now.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+            $('printTimestamp').textContent = now.toLocaleDateString('ar-EG') + ' - ' + now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
             // Verification QR: compact ASCII token (number, amount, date).
-            // qrcodejs miscounts multi-byte Arabic, so we keep the QR payload ASCII and
-            // leave the full Arabic details on the receipt body itself.
-            const summary =
-                `OFOQ|${document.getElementById('receiptNumber').value}` +
-                `|$${pkgPrice.toFixed(2)}|${rawDate || ''}`;
-            updateReceiptQR(summary);
+            updateReceiptQR(`OFOQ|${$('receiptNumber').value}|$${pricing.totalUSD}|${rawDate || ''}`);
         }
 
-        // ================= LOCAL STORAGE & ARCHIVE FUNCTIONS ================= //
+        // ================= التغييرات والحفظ التلقائي =================
+        function onFieldChange() {
+            updateReceipt();
+            scheduleSave();
+        }
+
+        function onPricingChange() {
+            frozen = null;
+            onFieldChange();
+        }
+
+        function onDurationChange() {
+            buildWarrantyOptions(Number($('packageDuration').value), null);
+            onPricingChange();
+        }
+
+        // A customer outside Iraq gets the payment methods for outside Iraq, and the other way round.
+        function onCountryChange() {
+            const inIraq = $('country').value === 'IQ';
+            const region = ($('paymentMethod').value || '').split(':')[0];
+            if (inIraq && region === 'INTL') $('paymentMethod').value = 'IQ:0';
+            if (!inIraq && region === 'IQ') $('paymentMethod').value = 'INTL:0';
+            onPricingChange();
+        }
+
+        let saveTimer = null;
+        function scheduleSave() {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => saveCurrentReceipt(false), 700);
+        }
+
+        function setAutosaveStatus(saved, time) {
+            const status = $('autosaveStatus');
+            status.querySelector('i').className = saved
+                ? 'fa-solid fa-circle-check text-green-700'
+                : 'fa-solid fa-cloud-arrow-up text-ofoq-lightbrown';
+            status.querySelector('span').textContent = saved
+                ? `محفوظ في الأرشيف تلقائياً (${time})`
+                : 'يُحفظ الوصل في الأرشيف تلقائياً بعد كتابة اسم العميل';
+        }
 
         function getStoredArchive() {
-            const data = localStorage.getItem('ofoq_receipts_archive');
-            return data ? JSON.parse(data) : [];
+            try {
+                const data = localStorage.getItem('ofoq_receipts_archive');
+                const list = data ? JSON.parse(data) : [];
+                return Array.isArray(list) ? list : [];
+            } catch (e) { return []; }
         }
 
-        function saveCurrentReceipt() {
-            const receiptData = {
-                receiptNumber: document.getElementById('receiptNumber').value,
-                customerName: document.getElementById('customerName').value.trim() || 'عميل غير مسجل',
-                date: document.getElementById('receiptDate').value,
-                time: document.getElementById('receiptTime').value,
-                paymentMethod: document.getElementById('paymentMethod').value,
-                packageType: document.getElementById('packageType').value,
-                packageDuration: document.getElementById('packageDuration').value,
-                packagePrice: document.getElementById('packagePrice').value,
-                country: document.getElementById('country').value,
-                customerNotes: document.getElementById('customerNotes').value.trim(),
+        function storeArchive(archive) {
+            try {
+                localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
+                return true;
+            } catch (e) {
+                alert('تعذّر الحفظ في الأرشيف (مساحة المتصفح ممتلئة). صدّر الأرشيف كملف JSON ثم امسح القديم.');
+                return false;
+            }
+        }
+
+        // Saves (or updates) the current receipt. Automatic once the customer's name is typed;
+        // `force` saves even without a name (when the receipt is downloaded or printed).
+        function saveCurrentReceipt(force) {
+            clearTimeout(saveTimer);
+            const customerName = $('customerName').value.trim();
+            if (!customerName && !force) return;
+
+            // The issue moment is when the receipt is first saved, unless it was set by hand.
+            if (!isSaved && !dateEdited) setDateTimeNow();
+
+            const pricing = Object.assign(currentPricing(), frozen || {});
+            const record = {
+                receiptNumber: $('receiptNumber').value,
+                customerName: customerName || 'عميل غير مسجل',
+                date: $('receiptDate').value,
+                time: $('receiptTime').value,
+                dateEdited,
+                countryId: frozen && frozen.countryId ? frozen.countryId : pricing.country.id,
+                country: pricing.countryName || pricing.country.name,
+                paymentMethod: pricing.methodName || pricing.method.name,
+                duration: durationToMonths(pricing.durationMonths || pricing.duration),
+                warranty: pricing.warrantyMonths != null ? pricing.warrantyMonths : pricing.warranty,
+                title: pricing.title,
+                durationText: pricing.durationText,
+                warrantyText: pricing.warrantyText,
+                priceUSD: pricing.priceUSD,
+                feeUSD: pricing.feeUSD,
+                totalUSD: pricing.totalUSD,
+                localPrice: pricing.localPrice,
+                localFee: pricing.localFee,
+                localTotal: pricing.localTotal,
+                rateNote: pricing.rateNote,
+                customerNotes: $('customerNotes').value.trim(),
                 savedAt: new Date().toISOString()
             };
 
-            let archive = getStoredArchive();
-            const existingIndex = archive.findIndex(r => r.receiptNumber === receiptData.receiptNumber);
-            if (existingIndex >= 0) {
-                archive[existingIndex] = receiptData;
-            } else {
-                archive.unshift(receiptData);
-            }
+            const archive = getStoredArchive();
+            const index = archive.findIndex(r => r.receiptNumber === record.receiptNumber);
+            if (index >= 0) archive[index] = record; else archive.unshift(record);
+            if (!storeArchive(archive)) return;
 
-            localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
-            alert('تم حفظ الوصل بنجاح في الأرشيف المحفوظ داخل الموقع!');
+            isSaved = true;
+            updateReceipt();
+            setAutosaveStatus(true, new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }));
         }
 
+        // Starts a new receipt. The current one is already in the archive.
+        function newReceipt() {
+            if ($('customerName').value.trim()) saveCurrentReceipt(false);
+            $('customerName').value = '';
+            $('customerNotes').value = '';
+            frozen = null;
+            isSaved = false;
+            dateEdited = false;
+            setDateEditing(false);
+            generateReceiptNumber();
+            setDateTimeNow();
+            setAutosaveStatus(false);
+            updateReceipt();
+            $('customerName').focus();
+        }
+
+        // Until the receipt is saved, its date and time follow the clock.
+        setInterval(() => {
+            if (!isSaved && !dateEdited && !dateEditing) {
+                setDateTimeNow();
+                updateReceipt();
+            }
+        }, 20000);
+
+        // ================= الأرشيف =================
         function openArchiveModal() {
             renderArchiveList();
-            document.getElementById('archiveModal').classList.remove('hidden');
+            $('archiveModal').classList.remove('hidden');
         }
 
         function closeArchiveModal() {
-            document.getElementById('archiveModal').classList.add('hidden');
+            $('archiveModal').classList.add('hidden');
+        }
+
+        function archiveSummary(item) {
+            if (item.durationText) {
+                return {
+                    tag: `${item.durationText} - ضمان ${item.warrantyText || ''}`,
+                    amount: item.localTotal || ('$' + item.totalUSD)
+                };
+            }
+            // وصولات النسخة السابقة
+            return {
+                tag: `${item.packageType || ''} - ${item.packageDuration || ''}`,
+                amount: '$' + (item.packagePrice || '')
+            };
         }
 
         function renderArchiveList() {
-            const container = document.getElementById('archiveListContainer');
+            const container = $('archiveListContainer');
             const archive = getStoredArchive();
 
             if (archive.length === 0) {
@@ -752,22 +1107,23 @@
 
             container.innerHTML = '';
             archive.forEach((item, index) => {
+                const summary = archiveSummary(item);
                 const div = document.createElement('div');
                 div.className = 'bg-white p-3.5 rounded-xl border border-ofoq-creamcard flex items-center justify-between shadow-sm';
                 div.innerHTML = `
                     <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <span class="font-mono font-bold text-xs text-ofoq-dark">${esc(item.receiptNumber)}</span>
-                            <span class="bg-ofoq-cream text-ofoq-dark text-[10px] font-bold px-2 py-0.5 rounded">${esc(item.packageType)} - ${esc(item.packageDuration)}</span>
+                            <span class="bg-ofoq-cream text-ofoq-dark text-[10px] font-bold px-2 py-0.5 rounded">${esc(summary.tag)}</span>
                         </div>
-                        <p class="text-xs font-black text-slate-800 mt-1">${esc(item.customerName)} <span class="text-ofoq-brown font-mono font-bold">($${esc(item.packagePrice)})</span></p>
-                        <p class="text-[10px] text-slate-500 mt-0.5">${esc(item.date)} | ${esc(item.paymentMethod)}</p>
+                        <p class="text-xs font-black text-slate-800 mt-1">${esc(item.customerName)} <span class="text-ofoq-brown font-mono font-bold">(${esc(summary.amount)})</span></p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">${esc(item.date)} ${esc(item.time || '')} | ${esc(item.paymentMethod)}</p>
                     </div>
                     <div class="flex items-center gap-1.5">
-                        <button onclick='loadReceiptFromArchive(${index})' class="bg-ofoq-brown hover:bg-ofoq-dark text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="استعراض الوصل">
+                        <button onclick="loadReceiptFromArchive(${index})" class="bg-ofoq-brown hover:bg-ofoq-dark text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="استعراض الوصل">
                             <i class="fa-solid fa-eye"></i>
                         </button>
-                        <button onclick='deleteArchivedItem(${index})' class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="حذف">
+                        <button onclick="deleteArchivedItem(${index})" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg text-xs font-bold transition" title="حذف">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -777,41 +1133,80 @@
         }
 
         function loadReceiptFromArchive(index) {
-            const archive = getStoredArchive();
-            const item = archive[index];
+            const item = getStoredArchive()[index];
             if (!item) return;
+            clearTimeout(saveTimer);
 
-            document.getElementById('receiptNumber').value = item.receiptNumber;
-            document.getElementById('customerName').value = item.customerName;
-            document.getElementById('receiptDate').value = item.date;
-            document.getElementById('receiptTime').value = item.time;
-            document.getElementById('paymentMethod').value = item.paymentMethod;
-            document.getElementById('packageType').value = item.packageType;
-            document.getElementById('packageDuration').value = item.packageDuration;
-            document.getElementById('packagePrice').value = item.packagePrice;
-            document.getElementById('country').value = item.country || 'العراق';
-            document.getElementById('customerNotes').value = item.customerNotes || '';
+            $('receiptNumber').value = item.receiptNumber;
+            $('customerName').value = item.customerName === 'عميل غير مسجل' ? '' : (item.customerName || '');
+            $('receiptDate').value = item.date || '';
+            $('receiptTime').value = item.time || '';
+            $('customerNotes').value = item.customerNotes || '';
 
+            const country = item.countryId ? countryById(item.countryId) : countryByName(item.country);
+            $('country').value = country.id;
+            selectMethodByName(item.paymentMethod);
+
+            const duration = item.duration || durationToMonths(item.packageDuration);
+            $('packageDuration').value = PRICE_LIST[duration] ? String(duration) : '12';
+            buildWarrantyOptions(Number($('packageDuration').value), item.warranty);
+
+            if (item.durationText) {
+                // Shown exactly as it was issued, until a price field is changed.
+                frozen = {
+                    countryName: item.country, methodName: item.paymentMethod, countryId: item.countryId,
+                    title: item.title, durationText: item.durationText, warrantyText: item.warrantyText,
+                    durationMonths: item.duration, warrantyMonths: item.warranty,
+                    priceUSD: item.priceUSD, feeUSD: item.feeUSD, totalUSD: item.totalUSD,
+                    localPrice: item.localPrice, localFee: item.localFee, localTotal: item.localTotal,
+                    rateNote: item.rateNote
+                };
+            } else {
+                // A receipt from the previous version: its own package, price and duration.
+                const usd = Number(item.packagePrice) || 0;
+                frozen = {
+                    countryName: item.country || country.name, methodName: item.paymentMethod, countryId: country.id,
+                    title: 'باقة ' + (item.packageType || ''), durationText: item.packageDuration || '',
+                    warrantyText: '—', durationMonths: durationToMonths(item.packageDuration), warrantyMonths: 0,
+                    priceUSD: usd, feeUSD: 0, totalUSD: usd,
+                    localPrice: moneyText(localAmount(usd, country), country), localFee: '',
+                    localTotal: moneyText(localAmount(usd, country), country),
+                    rateNote: ''
+                };
+            }
+
+            isSaved = true;
+            dateEdited = !!item.dateEdited;
+            setDateEditing(false);
+            setAutosaveStatus(true, item.savedAt ? new Date(item.savedAt).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '');
             updateReceipt();
             closeArchiveModal();
         }
 
         function deleteArchivedItem(index) {
-            let archive = getStoredArchive();
+            const archive = getStoredArchive();
+            const item = archive[index];
+            if (!item || !confirm(`حذف الوصل ${item.receiptNumber} من الأرشيف؟`)) return;
             archive.splice(index, 1);
-            localStorage.setItem('ofoq_receipts_archive', JSON.stringify(archive));
+            storeArchive(archive);
+            if (item.receiptNumber === $('receiptNumber').value) {
+                isSaved = false;
+                setAutosaveStatus(false);
+            }
             renderArchiveList();
         }
 
         function exportJSONArchive() {
             const archive = getStoredArchive();
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(archive, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "ofoq_receipts_archive.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            const blob = new Blob([JSON.stringify(archive, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `ofoq_receipts_archive_${toISODate(new Date())}.json`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
 
         function importJSONArchive(event) {
@@ -834,7 +1229,7 @@
                         byNumber[r.receiptNumber] = r;
                     });
 
-                    localStorage.setItem('ofoq_receipts_archive', JSON.stringify(Object.values(byNumber)));
+                    storeArchive(Object.values(byNumber));
                     renderArchiveList();
                     alert(`تم الدمج بنجاح: أُضيف ${added} وحُدّث ${updated}.`);
                 } catch (err) {
@@ -847,18 +1242,21 @@
         }
 
         function clearArchive() {
-            if (confirm('هل أنت متأكد من مسح جميع الوصولات المحفوظة؟')) {
+            if (confirm('هل أنت متأكد من مسح جميع الوصولات المحفوظة؟ صدّر نسخة JSON أولاً إذا تحتاجها.')) {
                 localStorage.removeItem('ofoq_receipts_archive');
+                isSaved = false;
+                setAutosaveStatus(false);
                 renderArchiveList();
             }
         }
 
-        // Download Receipt as PNG Image using html2canvas
+        // Download Receipt as PNG Image using html2canvas (the receipt is saved to the archive first)
         function downloadAsImage() {
-            const card = document.getElementById('receiptCard');
+            saveCurrentReceipt(true);
+            const card = $('receiptCard');
             html2canvas(card, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `Receipt_${document.getElementById('receiptNumber').value || 'OFOQ'}.png`;
+                link.download = `Receipt_${$('receiptNumber').value || 'OFOQ'}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             }).catch(err => {
@@ -867,12 +1265,21 @@
             });
         }
 
+        // Printing (or saving as PDF) also saves the receipt.
+        window.addEventListener('beforeprint', () => saveCurrentReceipt(true));
+
         // Initialize on load
         window.onload = function() {
             buildCountryOptions();
-            initDateTime();
+            buildPaymentOptions();
+            $('packageDuration').value = '12';
+            buildWarrantyOptions(12, null);
             generateReceiptNumber();
+            setDateTimeNow();
+            setDateEditing(false);
+            setAutosaveStatus(false);
             updateReceipt();
+            loadLiveRates();
         };
     </script>
 
