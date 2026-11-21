@@ -442,8 +442,8 @@
                     <div class="mb-5 flex items-center justify-center gap-3 bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl p-3">
                         <div id="receiptQR" class="bg-white p-1.5 rounded-lg border border-ofoq-creamcard leading-none"></div>
                         <div class="text-right">
-                            <p class="text-[11px] font-black text-ofoq-dark">رمز التحقق</p>
-                            <p class="text-[10px] text-slate-500 font-bold leading-snug">امسح الرمز لعرض<br>ملخّص بيانات هذا الوصل</p>
+                            <p class="text-[11px] font-black text-ofoq-dark">بيانات اشتراكك</p>
+                            <p class="text-[10px] text-slate-500 font-bold leading-snug">امسح الرمز بكاميرا جهازك<br>لعرض اشتراكك وتاريخ انتهائه<br>والأيام المتبقية</p>
                         </div>
                     </div>
 
@@ -563,14 +563,25 @@
             } catch (e) { return iso; }
         }
 
-        // (Re)build the verification QR with a short summary of the current receipt
+        // The QR opens this page on the official site with the receipt after "#"
+        // (the part after "#" stays on the customer's phone and is never sent to a server).
+        const RECEIPT_PAGE = 'https://ufuq-official.github.io/iPhone-/v.html';
+
+        function receiptLink(data) {
+            const bytes = new TextEncoder().encode(JSON.stringify(data));
+            let binary = '';
+            bytes.forEach(b => { binary += String.fromCharCode(b); });
+            return RECEIPT_PAGE + '#' + btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        // (Re)build the QR that opens the customer's receipt page
         function updateReceiptQR(summary) {
             const el = $('receiptQR');
             if (!el || typeof QRCode === 'undefined') return;
             const make = (text) => new QRCode(el, {
                 text: text,
-                width: 74,
-                height: 74,
+                width: 104,
+                height: 104,
                 colorDark: '#3D2314',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.L
@@ -935,8 +946,9 @@
             const now = new Date();
             $('printTimestamp').textContent = now.toLocaleDateString('ar-EG') + ' - ' + now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
-            // Verification QR: compact ASCII token (number, amount, date).
-            updateReceiptQR(`OFOQ|${$('receiptNumber').value}|$${pricing.totalUSD}|${rawDate || ''}`);
+            // QR: link to the receipt page (name, number, issue date, months of subscription and warranty, amount).
+            updateReceiptQR(receiptLink([1, customerName, $('receiptNumber').value, toISODate(certStart),
+                durationMonths, warrantyMonths || 0, pricing.localTotal]));
         }
 
         // ================= التغييرات والحفظ التلقائي =================
