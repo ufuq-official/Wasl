@@ -141,6 +141,24 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
+    <!-- Login: the receipts live in Ofuq's cloud records, opened with the owner's password -->
+    <div id="loginOverlay" class="fixed inset-0 z-[60] bg-ofoq-dark/95 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+        <form id="loginForm" onsubmit="submitLogin(event)" class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-ofoq-creamcard text-center">
+            <div class="w-16 h-16 mx-auto mb-3 rounded-2xl overflow-hidden border-2 border-ofoq-accent bg-ofoq-dark">
+                <img class="ofuq-logo-img w-full h-full object-cover" alt="شعار أفق">
+            </div>
+            <h2 class="text-lg font-black text-ofoq-dark">منصة الوصولات - أفق</h2>
+            <p class="text-xs text-slate-500 font-bold mt-1 mb-4">أدخل كلمة السر حتى تفتح الوصولات المحفوظة بالسحابة</p>
+            <input id="loginPassword" type="password" autocomplete="current-password" required
+                class="w-full bg-ofoq-creamlight border border-ofoq-creamcard rounded-xl px-3 py-2.5 text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-ofoq-accent"
+                placeholder="كلمة السر">
+            <button id="loginButton" type="submit" class="w-full mt-3 bg-ofoq-brown hover:bg-ofoq-dark text-white font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-lock-open"></i> <span>دخول</span>
+            </button>
+            <p id="loginError" class="text-xs font-bold text-red-600 mt-3 hidden"></p>
+        </form>
+    </div>
+
     <header class="bg-ofoq-dark text-white shadow-md no-print border-b-2 border-ofoq-accent">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -155,6 +173,10 @@
 
             <!-- Export Actions in Header -->
             <div class="flex items-center gap-2 flex-wrap">
+                <button id="cloudBadge" onclick="syncNow()" title="مزامنة مع السحابة الآن" class="bg-ofoq-dark border border-ofoq-accent/40 text-ofoq-accent px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-cloud"></i>
+                    <span>السحابة</span>
+                </button>
                 <button onclick="openArchiveModal()" class="bg-ofoq-brown hover:bg-ofoq-lightbrown text-white px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition duration-200 border border-ofoq-accent/30 shadow-sm">
                     <i class="fa-solid fa-folder-open text-ofoq-accent"></i>
                     <span>الأرشيف المحفوظ</span>
@@ -166,6 +188,10 @@
                 <button onclick="window.print()" class="bg-ofoq-cream text-ofoq-dark hover:bg-white px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm flex items-center gap-2 transition duration-200 shadow-sm">
                     <i class="fa-solid fa-print"></i>
                     <span>طباعة / PDF</span>
+                </button>
+                <button onclick="logout()" title="تسجيل الخروج من هذا الجهاز" class="text-ofoq-accent hover:text-white px-2 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>خروج</span>
                 </button>
             </div>
         </div>
@@ -516,7 +542,7 @@
             <div class="p-6 overflow-y-auto flex-1 space-y-4 bg-ofoq-creamlight">
                 <!-- JSON Backup Actions Bar -->
                 <div class="bg-ofoq-cream p-3.5 rounded-xl border border-ofoq-creamcard flex flex-wrap items-center justify-between gap-3">
-                    <span class="text-xs font-bold text-ofoq-dark">إدارة بيانات الأرشيف وتصديرها:</span>
+                    <span class="text-xs font-bold text-ofoq-dark"><i class="fa-solid fa-cloud text-ofoq-brown"></i> الوصولات محفوظة بالسحابة وتظهر على أي جهاز تدخل منه:</span>
                     <div class="flex items-center gap-2">
                         <button onclick="exportJSONArchive()" class="bg-ofoq-brown hover:bg-ofoq-dark text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
                             <i class="fa-solid fa-file-code"></i> تصدير JSON
@@ -536,8 +562,8 @@
 
             <!-- Modal Footer -->
             <div class="bg-white px-6 py-3 border-t border-ofoq-cream text-left flex justify-between items-center">
-                <button onclick="clearArchive()" class="text-red-600 hover:text-red-800 text-xs font-bold transition flex items-center gap-1">
-                    <i class="fa-solid fa-trash"></i> مسح الأرشيف بالكامل
+                <button onclick="syncNow()" class="text-ofoq-brown hover:text-ofoq-dark text-xs font-bold transition flex items-center gap-1">
+                    <i class="fa-solid fa-rotate"></i> مزامنة مع السحابة الآن
                 </button>
                 <button onclick="closeArchiveModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition">
                     إغلاق
@@ -565,15 +591,12 @@
             } catch (e) { return iso; }
         }
 
-        // The QR opens this page on the official site with the receipt after "#"
-        // (the part after "#" stays on the customer's phone and is never sent to a server).
+        // The QR opens the receipt page on the official site. It carries only the receipt's random token:
+        // the page reads the receipt from Ofuq's records, so a receipt that Ofuq did not issue never opens.
         const RECEIPT_PAGE = 'https://ofuq-store.com/v';
 
-        function receiptLink(data) {
-            const bytes = new TextEncoder().encode(JSON.stringify(data));
-            let binary = '';
-            bytes.forEach(b => { binary += String.fromCharCode(b); });
-            return RECEIPT_PAGE + '#' + btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        function receiptLink(token) {
+            return RECEIPT_PAGE + '#r=' + token;
         }
 
         // (Re)build the QR that opens the customer's receipt page
@@ -948,9 +971,8 @@
             const now = new Date();
             $('printTimestamp').textContent = now.toLocaleDateString('ar-EG') + ' - ' + now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 
-            // QR: link to the receipt page (name, number, issue date, months of subscription and warranty, amount).
-            updateReceiptQR(receiptLink([1, customerName, $('receiptNumber').value, toISODate(certStart),
-                durationMonths, warrantyMonths || 0, pricing.localTotal]));
+            // QR: the receipt page for this receipt (it opens once the receipt is saved in the cloud).
+            updateReceiptQR(receiptLink(currentToken));
         }
 
         // ================= التغييرات والحفظ التلقائي =================
@@ -989,9 +1011,17 @@
             status.querySelector('i').className = saved
                 ? 'fa-solid fa-circle-check text-green-700'
                 : 'fa-solid fa-cloud-arrow-up text-ofoq-lightbrown';
+            const current = saved ? getStoredArchive().find(r => r.receiptNumber === $('receiptNumber').value) : null;
+            const inCloud = current && current.cloud;
+            if (saved) {
+                status.querySelector('i').className = inCloud
+                    ? 'fa-solid fa-cloud text-green-700'
+                    : 'fa-solid fa-cloud-arrow-up text-ofoq-lightbrown';
+            }
             status.querySelector('span').textContent = saved
-                ? `محفوظ في الأرشيف تلقائياً (${time})`
-                : 'يُحفظ الوصل في الأرشيف تلقائياً بعد كتابة اسم العميل';
+                ? (inCloud ? `محفوظ بالسحابة (${time})` : `محفوظ على الجهاز (${time}) • جاري الرفع للسحابة`)
+                : 'يُحفظ الوصل بالسحابة تلقائياً بعد كتابة اسم العميل';
+            status.dataset.time = time || '';
         }
 
         function getStoredArchive() {
@@ -1025,6 +1055,7 @@
             const pricing = Object.assign(currentPricing(), frozen || {});
             const record = {
                 receiptNumber: $('receiptNumber').value,
+                token: currentToken,
                 customerName: customerName || 'عميل غير مسجل',
                 date: $('receiptDate').value,
                 time: $('receiptTime').value,
@@ -1045,7 +1076,8 @@
                 localTotal: pricing.localTotal,
                 rateNote: pricing.rateNote,
                 customerNotes: $('customerNotes').value.trim(),
-                savedAt: new Date().toISOString()
+                savedAt: new Date().toISOString(),
+                cloud: false
             };
 
             const archive = getStoredArchive();
@@ -1056,6 +1088,7 @@
             isSaved = true;
             updateReceipt();
             setAutosaveStatus(true, new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }));
+            pushSoon();
         }
 
         // Starts a new receipt. The current one is already in the archive.
@@ -1066,6 +1099,7 @@
             frozen = null;
             isSaved = false;
             dateEdited = false;
+            currentToken = newToken();
             setDateEditing(false);
             generateReceiptNumber();
             setDateTimeNow();
@@ -1081,6 +1115,214 @@
                 updateReceipt();
             }
         }, 20000);
+
+        // ================= السحابة =================
+        // The receipts are kept in Ofuq's records (https://ofuq-store.com/api), opened with the owner's password.
+        // This device keeps a copy, so a receipt is never lost while the internet is down: it is uploaded later.
+        const CLOUD_API = 'https://ofuq-store.com/api';
+        const SESSION_KEY = 'ofuq_wasl_session';
+        let currentToken = null;   // random token of the receipt in the form: its QR opens the receipt page with it
+        let syncing = null;        // the sync in progress
+        let retryTimer = null;
+        let pushTimer = null;
+
+        function newToken() {
+            const bytes = new Uint8Array(16);
+            crypto.getRandomValues(bytes);
+            let binary = '';
+            bytes.forEach(b => { binary += String.fromCharCode(b); });
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        function getSession() {
+            try {
+                const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+                return session && session.token && session.expires > Date.now() ? session : null;
+            } catch (e) { return null; }
+        }
+
+        function showLogin(message) {
+            $('loginOverlay').classList.remove('hidden');
+            $('loginError').textContent = message || '';
+            $('loginError').classList.toggle('hidden', !message);
+            setTimeout(() => $('loginPassword').focus(), 50);
+        }
+
+        function hideLogin() {
+            $('loginOverlay').classList.add('hidden');
+            $('loginPassword').value = '';
+        }
+
+        async function submitLogin(event) {
+            event.preventDefault();
+            const button = $('loginButton');
+            button.disabled = true;
+            button.querySelector('span').textContent = 'جاري الدخول…';
+            try {
+                const response = await fetch(CLOUD_API + '/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: $('loginPassword').value }),
+                    cache: 'no-store'
+                });
+                const body = await response.json().catch(() => ({}));
+                if (response.ok && body.token) {
+                    localStorage.setItem(SESSION_KEY, JSON.stringify({ token: body.token, expires: body.expires }));
+                    hideLogin();
+                    syncNow();
+                    return;
+                }
+                const messages = {
+                    401: 'كلمة السر غلط.',
+                    429: 'محاولات كثيرة غلط. انتظر ربع ساعة وحاول مرة ثانية.',
+                    503: 'السحابة بعدها ما مجهّزة. لازم نكمّل إعداد Cloudflare أولاً.'
+                };
+                showLogin(messages[response.status] || 'صار خطأ بالسيرفر. حاول مرة ثانية.');
+            } catch (e) {
+                showLogin('تعذّر الاتصال. تأكد من الإنترنت وحاول مرة ثانية.');
+            } finally {
+                button.disabled = false;
+                button.querySelector('span').textContent = 'دخول';
+            }
+        }
+
+        function logout() {
+            if (!confirm('تسجيل الخروج من هذا الجهاز؟ الوصولات تبقى محفوظة بالسحابة.')) return;
+            localStorage.removeItem(SESSION_KEY);
+            showLogin();
+        }
+
+        async function cloud(path, options) {
+            const session = getSession();
+            if (!session) { showLogin(); throw new Error('login'); }
+            options = options || {};
+            const headers = { 'Authorization': 'Bearer ' + session.token };
+            if (options.body) headers['Content-Type'] = 'application/json';
+            const response = await fetch(CLOUD_API + path, Object.assign({}, options, { headers, cache: 'no-store' }));
+            if (response.status === 401) {
+                localStorage.removeItem(SESSION_KEY);
+                showLogin('انتهت الجلسة. أدخل كلمة السر مرة ثانية.');
+                throw new Error('login');
+            }
+            if (!response.ok) throw new Error('http ' + response.status);
+            return response.json();
+        }
+
+        function setCloudState(state, detail) {
+            const badge = $('cloudBadge');
+            const looks = {
+                ok:    ['fa-cloud', 'text-green-300', 'محفوظ بالسحابة'],
+                busy:  ['fa-rotate fa-spin', 'text-ofoq-accent', 'جاري المزامنة…'],
+                error: ['fa-cloud-bolt', 'text-red-300', 'السحابة غير متصلة'],
+                login: ['fa-lock', 'text-ofoq-accent', 'سجّل الدخول']
+            }[state];
+            badge.className = 'bg-ofoq-dark border border-ofoq-accent/40 px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1.5 transition ' + looks[1];
+            badge.querySelector('i').className = 'fa-solid ' + looks[0];
+            badge.querySelector('span').textContent = detail || looks[2];
+        }
+
+        // What the cloud keeps for one receipt: searchable fields, plus the whole record as it is on this page.
+        function toCloud(item) {
+            const data = Object.assign({}, item);
+            delete data.token;
+            delete data.cloud;
+            const total = item.localTotal
+                || (item.totalUSD != null ? '$' + item.totalUSD : (item.packagePrice ? '$' + item.packagePrice : ''));
+            return {
+                number: item.receiptNumber,
+                token: item.token,
+                name: item.customerName || 'عميل غير مسجل',
+                issued: item.date,
+                duration: item.duration || durationToMonths(item.packageDuration),
+                warranty: item.warranty != null ? item.warranty : 0,
+                total,
+                savedAt: item.savedAt || new Date().toISOString(),
+                data
+            };
+        }
+
+        function sortArchive(list) {
+            return list.sort((a, b) =>
+                ((b.date || '') + (b.time || '')).localeCompare((a.date || '') + (a.time || '')) ||
+                String(b.savedAt || '').localeCompare(String(a.savedAt || '')));
+        }
+
+        // Uploads the receipts changed on this device, then takes the cloud's list as the archive
+        // (receipts not uploaded yet stay until they are).
+        function syncNow() {
+            if (syncing) return syncing;
+            clearTimeout(retryTimer);
+            syncing = (async () => {
+                setCloudState('busy');
+                try {
+                    let archive = getStoredArchive();
+                    let changed = false;
+                    archive.forEach(r => {
+                        if (!r.token) { r.token = newToken(); r.cloud = false; changed = true; }
+                        if (!r.savedAt) { r.savedAt = new Date().toISOString(); changed = true; }
+                    });
+                    if (changed) storeArchive(archive);
+
+                    let rejected = 0;
+                    const pending = archive.filter(r => !r.cloud);
+                    for (let i = 0; i < pending.length; i += 100) {
+                        const batch = pending.slice(i, i + 100);
+                        const sent = {};
+                        batch.forEach(r => { sent[r.receiptNumber] = r.savedAt; });
+                        const result = await cloud('/receipts', { method: 'POST', body: JSON.stringify({ records: batch.map(toCloud) }) });
+                        rejected += (result.rejected || []).length;
+
+                        const byNumber = {};
+                        (result.saved || []).forEach(s => { byNumber[s.number] = s; });
+                        archive = getStoredArchive().filter(r => {
+                            const s = byNumber[r.receiptNumber];
+                            if (!s) return true;
+                            if (s.status === 'deleted') return false;   // deleted from another device
+                            r.token = s.token;                           // the token it was first saved with
+                            if (r.savedAt === sent[r.receiptNumber]) r.cloud = true;
+                            return true;
+                        });
+                        storeArchive(archive);
+                    }
+
+                    const { receipts } = await cloud('/receipts');
+                    const merged = {};
+                    receipts.forEach(r => { merged[r.receiptNumber] = Object.assign(r, { cloud: true }); });
+                    getStoredArchive().forEach(r => {
+                        if (r.cloud) return;                             // already in the cloud's list, or deleted there
+                        const c = merged[r.receiptNumber];
+                        if (!c || Date.parse(r.savedAt) > Date.parse(c.savedAt)) merged[r.receiptNumber] = r;
+                    });
+                    storeArchive(sortArchive(Object.values(merged)));
+
+                    const current = merged[$('receiptNumber').value];
+                    if (current && current.token && current.token !== currentToken) {
+                        currentToken = current.token;
+                        updateReceipt();
+                    }
+                    if (isSaved) setAutosaveStatus(true, $('autosaveStatus').dataset.time);
+                    if (!$('archiveModal').classList.contains('hidden')) renderArchiveList();
+                    setCloudState('ok', rejected ? `محفوظ • ${rejected} وصل ناقص البيانات` : null);
+                } catch (e) {
+                    if (e.message === 'login') {
+                        setCloudState('login');
+                    } else {
+                        setCloudState('error');
+                        retryTimer = setTimeout(syncNow, 30000);
+                    }
+                } finally {
+                    syncing = null;
+                }
+            })();
+            return syncing;
+        }
+
+        function pushSoon() {
+            clearTimeout(pushTimer);
+            pushTimer = setTimeout(syncNow, 1500);
+        }
+
+        window.addEventListener('online', () => { if (getSession()) syncNow(); });
 
         // ================= الأرشيف =================
         function openArchiveModal() {
@@ -1128,6 +1370,7 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="font-mono font-bold text-xs text-ofoq-dark">${esc(item.receiptNumber)}</span>
+                            <i class="fa-solid ${item.cloud ? 'fa-cloud text-green-700' : 'fa-cloud-arrow-up text-ofoq-lightbrown'} text-[10px]" title="${item.cloud ? 'محفوظ بالسحابة' : 'بانتظار الرفع للسحابة'}"></i>
                             <span class="bg-ofoq-cream text-ofoq-dark text-[10px] font-bold px-2 py-0.5 rounded">${esc(summary.tag)}</span>
                         </div>
                         <p class="text-xs font-black text-slate-800 mt-1">${esc(item.customerName)} <span class="text-ofoq-brown font-mono font-bold">(${esc(summary.amount)})</span></p>
@@ -1152,6 +1395,7 @@
             clearTimeout(saveTimer);
 
             $('receiptNumber').value = item.receiptNumber;
+            currentToken = item.token || newToken();
             $('customerName').value = item.customerName === 'عميل غير مسجل' ? '' : (item.customerName || '');
             $('receiptDate').value = item.date || '';
             $('receiptTime').value = item.time || '';
@@ -1197,15 +1441,20 @@
             closeArchiveModal();
         }
 
-        function deleteArchivedItem(index) {
-            const archive = getStoredArchive();
-            const item = archive[index];
-            if (!item || !confirm(`حذف الوصل ${item.receiptNumber} من الأرشيف؟`)) return;
-            archive.splice(index, 1);
+        async function deleteArchivedItem(index) {
+            const item = getStoredArchive()[index];
+            if (!item || !confirm(`حذف الوصل ${item.receiptNumber}؟\nرمز الـ QR مال هذا الوصل راح يبين للزبون إنه ملغي.`)) return;
+            try {
+                await cloud('/receipts/' + encodeURIComponent(item.receiptNumber), { method: 'DELETE' });
+            } catch (e) {
+                if (e.message !== 'login') alert('تعذّر الحذف من السحابة. تأكد من الإنترنت وحاول مرة ثانية.');
+                return;
+            }
+            const archive = getStoredArchive().filter(r => r.receiptNumber !== item.receiptNumber);
             storeArchive(archive);
             if (item.receiptNumber === $('receiptNumber').value) {
-                isSaved = false;
-                setAutosaveStatus(false);
+                $('customerName').value = '';   // the deleted receipt is not saved again
+                newReceipt();
             }
             renderArchiveList();
         }
@@ -1240,12 +1489,13 @@
                     imported.forEach(r => {
                         if (!r || !r.receiptNumber) return;
                         if (byNumber[r.receiptNumber]) updated++; else added++;
-                        byNumber[r.receiptNumber] = r;
+                        byNumber[r.receiptNumber] = Object.assign({}, r, { cloud: false });
                     });
 
                     storeArchive(Object.values(byNumber));
                     renderArchiveList();
-                    alert(`تم الدمج بنجاح: أُضيف ${added} وحُدّث ${updated}.`);
+                    alert(`تم الدمج بنجاح: أُضيف ${added} وحُدّث ${updated}. راح تنرفع للسحابة هسه.`);
+                    syncNow().then(renderArchiveList);
                 } catch (err) {
                     alert('حدث خطأ أثناء قراءة ملف JSON.');
                 } finally {
@@ -1255,18 +1505,13 @@
             reader.readAsText(file);
         }
 
-        function clearArchive() {
-            if (confirm('هل أنت متأكد من مسح جميع الوصولات المحفوظة؟ صدّر نسخة JSON أولاً إذا تحتاجها.')) {
-                localStorage.removeItem('ofoq_receipts_archive');
-                isSaved = false;
-                setAutosaveStatus(false);
-                renderArchiveList();
-            }
-        }
-
         // Download Receipt as PNG Image using html2canvas (the receipt is saved to the archive first)
-        function downloadAsImage() {
+        async function downloadAsImage() {
             saveCurrentReceipt(true);
+            await syncNow();
+            const current = getStoredArchive().find(r => r.receiptNumber === $('receiptNumber').value);
+            if (!(current && current.cloud) &&
+                !confirm('الوصل بعده ما انحفظ بالسحابة، فرمز الـ QR ما راح يفتح للزبون لحد ما ينحفظ.\nتكمل التنزيل؟')) return;
             const card = $('receiptCard');
             html2canvas(card, { scale: 2, useCORS: true, backgroundColor: '#ffffff' }).then(canvas => {
                 const link = document.createElement('a');
@@ -1288,12 +1533,19 @@
             buildPaymentOptions();
             $('packageDuration').value = '12';
             buildWarrantyOptions(12, null);
+            currentToken = newToken();
             generateReceiptNumber();
             setDateTimeNow();
             setDateEditing(false);
             setAutosaveStatus(false);
             updateReceipt();
             loadLiveRates();
+            if (getSession()) {
+                hideLogin();
+                syncNow();
+            } else {
+                showLogin();
+            }
         };
     </script>
 
