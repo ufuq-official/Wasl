@@ -663,9 +663,10 @@
 
         // ================= الدول وأسعار الصرف =================
         // سعر الصرف لكل دولة هو الأعلى بين الوصولات والموقع الرسمي، والسعر يُقرّب للأعلى مثل الموقع الرسمي.
-        // العراق مثبّت على 1520 دينار للدولار. الدول المكتوب عندها fixed عملتها مربوطة بالدولار.
+        // العراق مثل الموقع الرسمي: كل 1$ من سعر الباقة = 1,000 د.ع (8$ = 8,000 د.ع)، ورسوم الدفع 2$ = 3,000 د.ع.
+        // الدول المكتوب عندها fixed عملتها مربوطة بالدولار ولا تتغيّر مع أسعار الصرف الحية.
         const COUNTRIES = [
-            { id: 'IQ', name: 'العراق', flag: '🇮🇶', cur: 'IQD', symbol: 'د.ع', rate: 1520, step: 1, dec: 0, fixed: true },
+            { id: 'IQ', name: 'العراق', flag: '🇮🇶', cur: 'IQD', symbol: 'د.ع', rate: 1000, feeRate: 1500, step: 1, dec: 0, fixed: true },
             { id: 'SA', name: 'السعودية', flag: '🇸🇦', cur: 'SAR', symbol: 'ر.س', rate: 3.75, step: 1, dec: 2, fixed: true },
             { id: 'AE', name: 'الإمارات', flag: '🇦🇪', cur: 'AED', symbol: 'د.إ', rate: 3.6725, step: 1, dec: 2, fixed: true },
             { id: 'KW', name: 'الكويت', flag: '🇰🇼', cur: 'KWD', symbol: 'د.ك', rate: 0.307, step: 0.05, dec: 3 },
@@ -711,6 +712,13 @@
             if (country.cur === 'USD') return usd;
             const step = country.step || 1;
             return Math.ceil((usd * country.rate) / step - 1e-9) * step;
+        }
+
+        // رسوم الدفع بعملة الدولة. العراق له سعر خاص للرسوم (2$ = 3,000 د.ع) مثل الموقع الرسمي.
+        function feeAmount(usd, country) {
+            if (!usd) return 0;
+            if (!country.feeRate || country.cur === 'USD') return localAmount(usd, country);
+            return localAmount(usd, Object.assign({}, country, { rate: country.feeRate }));
         }
 
         // A dollar amount kept left-to-right inside Arabic text.
@@ -778,7 +786,7 @@
             const select = $('paymentMethod');
             select.innerHTML = Object.entries(PAYMENT_METHODS).map(([region, group]) => `
                 <optgroup label="${esc(group.title)}">
-                    ${group.methods.map((m, i) => `<option value="${region}:${i}">${esc(m.name)}${m.fee ? ` (رسوم ${usdText(m.fee)})` : ''}</option>`).join('')}
+                    ${group.methods.map((m, i) => `<option value="${region}:${i}">${esc(m.name)}${m.fee ? ` (رسوم ${region === 'IQ' ? moneyText(feeAmount(m.fee, countryById('IQ')), countryById('IQ')) : usdText(m.fee)})` : ''}</option>`).join('')}
                 </optgroup>`).join('');
             select.value = 'IQ:0';
         }
@@ -904,8 +912,10 @@
             const feeUSD = method.fee || 0;
 
             const price = localAmount(priceUSD, country);
-            const fee = feeUSD ? localAmount(feeUSD, country) : 0;
-            const rateNote = country.cur === 'USD'
+            const fee = feeAmount(feeUSD, country);
+            const rateNote = country.id === 'IQ'
+                ? 'السعر بالدينار العراقي حسب أسعار الموقع الرسمي'
+                : country.cur === 'USD'
                 ? `السعر بالدولار الأمريكي • الأساس: ${usdText(priceUSD)}${feeUSD ? ` + رسوم ${usdText(feeUSD)}` : ''}`
                 : `سعر الصرف: 1 دولار = ${formatMoney(country.rate, country.rate < 10 ? 3 : 0)} ${country.symbol} • الأساس: ${usdText(priceUSD)}${feeUSD ? ` + رسوم ${usdText(feeUSD)}` : ''}`;
 
@@ -951,7 +961,7 @@
             $('priceUSDPreview').textContent = usdText(pricing.priceUSD) + (pricing.feeUSD ? ` + رسوم ${usdText(pricing.feeUSD)}` : '');
             $('localPricePreview').textContent = frozen
                 ? `محفوظ كما صدر: ${pricing.localTotal}`
-                : `السعر في ${pricing.country.name}: ${pricing.localTotal}${pricing.feeUSD ? ` (يشمل رسوم ${usdText(pricing.feeUSD)})` : ''}`;
+                : `السعر في ${pricing.country.name}: ${pricing.localTotal}${pricing.feeUSD ? ` (يشمل رسوم ${pricing.localFee})` : ''}`;
 
             // Certificate validity: issue = receipt date, expiry = issue + subscription, warranty end = issue + warranty
             const certStart = rawDate ? new Date(rawDate + 'T00:00:00') : new Date();
